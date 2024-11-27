@@ -2,6 +2,12 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+#include "HostTimer.cuh"
+#include "Point.cuh"
+
+using namespace Timers;
+using namespace DataStructures;
+
 #include <string>
 #include <iostream>
 #include <cstdio>
@@ -18,49 +24,7 @@
         return instance;														  \
     }
 
-
-#define HOST_DEVICE __host__ __device__
-
-template<size_t dim>
-struct Point {
-public:
-	float Coordinates[dim];
-
-	HOST_DEVICE
-		Point() {
-		for (int i = 0; i < dim; i++) {
-			Coordinates[i] = 0.0;
-		}
-	}
-
-	HOST_DEVICE
-		static float SquareDistance(const Point<dim>& p, const Point<dim>& q) {
-		float distance = 0.0;
-		for (int i = 0; i < dim; i++) {
-			float difference = p.Coordinates[i] - q.Coordinates[i];
-			distance += difference * difference;
-		}
-
-		return distance;
-	}
-
-	HOST_DEVICE
-		Point<dim>& operator+=(const Point<dim>& other) {
-		for (int i = 0; i < dim; i++) {
-			this->Coordinates[i] += other.Coordinates[i];
-		}
-
-		return *this;
-	}
-
-private:
-	HOST_DEVICE
-		Point(const float coordinates[dim]) {
-		for (int i = 0; i < dim; i++) {
-			Coordinates[i] = coordinates[i];
-		}
-	}
-};
+#define THREADS_IN_ONE_BLOCK 1024
 
 struct ProgramParameters {
 	std::string DataFormat{};
@@ -95,43 +59,6 @@ ProgramParameters ParseProgramParameters(int argc, char* argv[]) {
 	parameters.Success = true;
 	return parameters;
 }
-
-class Timer {
-public:
-	virtual void Start() = 0;
-	virtual void Stop() = 0;
-	virtual float ElapsedMiliseconds() = 0;
-	virtual void Reset() = 0;
-	virtual ~Timer() = default;
-};
-
-class HostTimer : public Timer {
-	std::chrono::steady_clock::time_point StartTimePoint{};
-	std::chrono::microseconds TotalElapsedMicroseconds{};
-
-public:
-	void Start() override {
-		StartTimePoint = std::chrono::steady_clock::now();
-	}
-
-	void Stop() override {
-		auto stopTimePoint = std::chrono::steady_clock::now();
-		TotalElapsedMicroseconds += std::chrono::duration_cast<std::chrono::microseconds>(
-			stopTimePoint - StartTimePoint
-		);
-	}
-
-	float ElapsedMiliseconds() override {
-		return TotalElapsedMicroseconds.count() / 1000.0f;
-	}
-
-	void Reset() override {
-		StartTimePoint = std::chrono::steady_clock::time_point();
-		TotalElapsedMicroseconds = std::chrono::microseconds();
-	}
-
-	~HostTimer() override = default;
-};
 
 template<size_t dim>
 class ClusteringCPU {
@@ -248,6 +175,148 @@ private:
 			updatedCounts[i] = 0;
 		}
 	}
+};
+
+
+template<size_t dim>
+__global__
+void AoS2SoAKernel(float* deviceAoS, float* deviceSoA, size_t length) {
+	// [x1, y1, z1, x2, y2, z2] -> [x1, x2, y1, y2, z1, z2]
+	
+	size_t tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+	if (tid >= length) return;
+
+	for (size_t i = 0; i < dim; ++i) {
+		deviceSoA[tid + i * length] = deviceAoS[tid * dim + i];
+	}
+}
+
+template<size_t dim>
+__global__
+void SoA2AoSKernel(float* deviceSoA, float* deviceAoS, size_t length) {
+	// [x1, x2, y1, y2, z1, z2] -> [x1, y1, z1, x2, y2, z2] 
+
+	size_t tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+	if (tid >= length) return;
+
+	for (size_t i = 0; i < dim; ++i) {
+		deviceAoS[tid * dim + i] = deviceSoA[tid + i * length];
+	}
+}
+
+template<size_t dim>
+class DevicePointsCollection {
+private:
+	size_t Size{};
+	float* DevicePoints{};
+
+public:
+	DevicePointsCollection(size_t size)
+	{
+		Size = size;
+		cudaMalloc(&DevicePoints, sizeof(Point<dim>) * Size);
+		cudaMemset(DevicePoints, 0, sizeof(Point<dim>) * Size);
+	}
+
+	DevicePointsCollection(thrust::host_vector<Point<dim>>& points)
+	{
+		FromHost(points);
+	}
+
+	~DevicePointsCollection() {
+		cudaFree(DeviePoints);
+	}
+
+	void operator=(thrust::host_vector<Point<dim>>& points) {
+		FromHost(points);
+	}
+
+	size_t GetSize() {
+		return Size;
+	}
+
+	__device__
+	static double& GetCoordinate(double* devicePoints, size_t size, size_t pointIndex, size_t dimensionIdx) {
+		return devicePoints[pointIndex + dimensionIdx * size];
+	}
+
+	float* RawAccess() {
+		return DevicePoints;
+	}
+
+	thrust::host_vector<Point<dim>> ToHost() {
+		float* deviceAoS{};
+
+		cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size);
+
+		size_t blockCount = (Size + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK;
+
+		// pomiar czasu na konwersję pomiędzy SoA -> AoS
+		SoA2AoSKernel<dim> << < blockCount, THREADS_IN_ONE_BLOCK >> > (DevicePoints, deviceAoS, Size);
+		// stiop pomiar czasu na konwersję pomiędzy SoA -> AoS
+
+		thrust::host_vector<Point<dim>> points(Size);
+		
+		// pomiar czasu na transfer danych z gpu na cpu
+		cudaMemcpy(points.data(), deviceAoS, sizeof(Point<dim>) * Size, cudaMemcpyDeviceToHost);
+		// stop pomiaru czasu na transfer danych z gpu na cpu
+
+		cudaFree(deviceAoS);
+	}
+
+private:
+	void FromHost(thrust::host_vector<Point<dim>>& points) {
+		Size = points.size();
+
+		float* deviceAoS{};
+
+		cudaMalloc(&DevicePoints, sizeof(Point<dim>) * Size);
+		cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size);
+
+		// pomiar czasu na transfer danych z cpu na gpu
+		cudaMemcpy(deviceAos, points.data(), sizeof(Point<dim>) * Size, cudaMemcpyHostToDevice);
+		// stop pomiaru czasu na transfer danych z cpu na gpu
+
+		size_t blockCount = (Size + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK;
+
+		// pomiar czasu na konwersję pomiędzy AoS -> SoA
+		AoS2SoAKernel<dim> << <blockCount, THREADS_IN_ONE_BLOCK >> > (deviceAoS, DevicePoints, Size);
+		// stop pomiaru czasu na konwersję pomiędzy AoS -> SoA
+
+		cudaFree(deviceAoS);
+	}
+};
+
+template<size_t dim>
+struct DeviceRawDataGPU1 {
+	size_t PointsCount{};
+	float* DevicePoints{};
+	size_t CentroidsCount{};
+	float* DeviceCentroids{};
+	size_t* Membership{};
+	float* deviceChanges{};
+	size_t* PointsPermutation{};
+	float* UpdatedCentroids{};
+	size_t* UpdatedCentroidsCounts{};
+};
+
+template<size_t dim>
+struct DeviceDataGPU1 {
+
+};
+
+
+template<size_t dim>
+class ClusteringGPU1 {
+public:
+
+private:
+	void UpdateCentroids() {
+
+	}
+
 };
 
 class IProgramManager {

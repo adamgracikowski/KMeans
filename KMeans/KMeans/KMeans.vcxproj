@@ -79,6 +79,12 @@
   <ItemGroup>
     <CudaCompile Include="kernel.cu" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DeviceTimer.cuh" />
+    <ClInclude Include="HostTimer.cuh" />
+    <ClInclude Include="Point.cuh" />
+    <ClInclude Include="Timer.cuh" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.6.targets" />
