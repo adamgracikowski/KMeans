@@ -11,11 +11,11 @@
 
 #include <thrust/host_vector.h>
 
-#define GENERATE_CASE(M)												   \
-    case M: {															   \
-        auto instance = new ProgramManager<M>(N - k, d, k);				   \
-        instance->LoadDataFromInputFile(inputFile, parameters.DataFormat);  \
-        return instance;												   \
+#define GENERATE_CASE(M)														  \
+    case M: {																	  \
+        auto instance = std::make_unique<ProgramManager<M>>(N, d, k, parameters); \
+        instance->LoadDataFromInputFile(inputFile);								  \
+        return instance;														  \
     }
 
 
@@ -27,14 +27,14 @@ public:
 	float Coordinates[dim];
 
 	HOST_DEVICE
-	Point() {
+		Point() {
 		for (int i = 0; i < dim; i++) {
 			Coordinates[i] = 0.0;
 		}
 	}
 
 	HOST_DEVICE
-	static float SquareDistance(const Point<dim>& p, const Point<dim>& q) {
+		static float SquareDistance(const Point<dim>& p, const Point<dim>& q) {
 		float distance = 0.0;
 		for (int i = 0; i < dim; i++) {
 			float difference = p.Coordinates[i] - q.Coordinates[i];
@@ -45,7 +45,7 @@ public:
 	}
 
 	HOST_DEVICE
-	Point<dim>& operator+=(const Point<dim>& other) {
+		Point<dim>& operator+=(const Point<dim>& other) {
 		for (int i = 0; i < dim; i++) {
 			this->Coordinates[i] += other.Coordinates[i];
 		}
@@ -55,7 +55,7 @@ public:
 
 private:
 	HOST_DEVICE
-	Point(const float coordinates[dim]) {
+		Point(const float coordinates[dim]) {
 		for (int i = 0; i < dim; i++) {
 			Coordinates[i] = coordinates[i];
 		}
@@ -252,8 +252,9 @@ private:
 
 class IProgramManager {
 public:
-	virtual void StartComputation(std::string computationMethod) = 0;
-	virtual void LoadDataFromInputFile(FILE* inputFile, std::string dataFormat) = 0;
+	virtual thrust::host_vector<size_t> StartComputation() = 0;
+	virtual void LoadDataFromInputFile(FILE* inputFile) = 0;
+	virtual void SaveDataToOutputFile(thrust::host_vector<size_t>& membership) = 0;
 	virtual ~IProgramManager() = default;
 };
 
@@ -264,33 +265,43 @@ public:
 	int d{};
 	int k{};
 
+	ProgramParameters Parameters;
+
 	thrust::host_vector<Point<dim>> Points{};
 	thrust::host_vector<Point<dim>> Centroids{};
 
-	ProgramManager(int N, int d, int k)
+	ProgramManager(int N, int d, int k, ProgramParameters parameters)
 	{
 		this->N = N;
 		this->d = d;
 		this->k = k;
+		this->Parameters = parameters;
 	}
 
-	void StartComputation(std::string computationMethod) override {
-		if (computationMethod == "cpu") {
+	thrust::host_vector<size_t> StartComputation() override {
+		if (Parameters.ComputationMethod == "cpu") {
 			ClusteringCPU<dim> clustering{};
-			clustering.PerformClustering(Points, Centroids);
+			auto membership = clustering.PerformClustering(Points, Centroids);
+			return membership;
 		}
+
+		return thrust::host_vector<size_t>{};
 	}
 
-	void LoadDataFromInputFile(FILE* inputFile, std::string dataFormat) override {
-		if (dataFormat == "txt") {
+	void LoadDataFromInputFile(FILE* inputFile) override {
+		if (Parameters.DataFormat == "txt") {
 			LoadDataFromTextFile(inputFile);
 		}
-		else if (dataFormat == "bin") {
+		else if (Parameters.DataFormat == "bin") {
 			LoadDataFromBinaryFile(inputFile);
 		}
 		else {
-			throw std::runtime_error("Invalid format " + dataFormat);
+			throw std::runtime_error("Invalid format " + Parameters.DataFormat);
 		}
+	}
+
+	void SaveDataToOutputFile(thrust::host_vector<size_t>& membership) override {
+		SaveDataToTextFile(membership);
 	}
 
 	~ProgramManager() = default;
@@ -306,10 +317,13 @@ private:
 					fclose(inputFile);
 					throw std::runtime_error("Error while reading the coordinates of the centroids.");
 				}
+				if (i < N) {
+					Points[i].Coordinates[j] = Centroids[i].Coordinates[j];
+				}
 			}
 		}
 
-		for (int i = 0; i < N; ++i) {
+		for (int i = k; i < N; ++i) {
 			for (size_t j = 0; j < dim; ++j) {
 				if (fscanf_s(inputFile, "%f", &(Points[i].Coordinates[j])) != 1) {
 					fclose(inputFile);
@@ -318,7 +332,6 @@ private:
 			}
 		}
 	}
-
 	void LoadDataFromBinaryFile(FILE* inputFile) {
 		Points.resize(N);
 		Centroids.resize(k);
@@ -328,18 +341,65 @@ private:
 				fclose(inputFile);
 				throw std::runtime_error("Error while reading the coordinates of the centroids.");
 			}
+			if (i < N) {
+				for (size_t j = 0; j < dim; ++j) {
+					Points[i].Coordinates[j] = Centroids[i].Coordinates[j];
+				}
+			}
 		}
 
-		for (int i = 0; i < N; ++i) {
+		for (int i = k; i < N; ++i) {
 			if (fread(Points[i].Coordinates, sizeof(float), dim, inputFile) != dim) {
 				fclose(inputFile);
 				throw std::runtime_error("Error while reading the coordinates of the points.");
 			}
 		}
 	}
+	void SaveDataToTextFile(thrust::host_vector<size_t>& membership) {
+		FILE* outputFile{};
+
+		if (fopen_s(&outputFile, Parameters.OutputFile.c_str(), "w") != 0) {
+			throw std::runtime_error("Could not open " + Parameters.OutputFile);
+		}
+
+		for (const auto& centroid : Centroids) {
+			for (size_t i = 0; i < dim - 1; ++i) {
+				fprintf(outputFile, "%.6f ", centroid.Coordinates[i]);
+			}
+
+			fprintf(outputFile, "%.6f\n", centroid.Coordinates[dim - 1]);
+		}
+
+		for (const auto& m : membership) {
+			fprintf(outputFile, "%zu\n", m);
+		}
+
+		fclose(outputFile);
+	}
+	void SaveDataToBinaryFile(thrust::host_vector<size_t>& membership) {
+		FILE* outputFile{};
+
+		if (fopen_s(&outputFile, Parameters.OutputFile.c_str(), "wb") != 0) {
+			throw std::runtime_error("Could not open " + Parameters.OutputFile);
+		}
+
+		for (const auto& centroid : Centroids) {
+			if (fwrite(centroid.Coordinates, sizeof(float), dim, outputFile) != dim) {
+				fclose(outputFile);
+				throw std::runtime_error("Error writing centroids to binary file.");
+			}
+		}
+
+		if (fwrite(membership.data(), sizeof(size_t), membership.size(), outputFile) != membership.size()) {
+			fclose(outputFile);
+			throw std::runtime_error("Error writing membership data to binary file.");
+		}
+
+		fclose(outputFile);
+	}
 };
 
-IProgramManager* CreateManagerInstance(ProgramParameters parameters) {
+std::unique_ptr<IProgramManager> CreateManagerInstance(ProgramParameters parameters) {
 	FILE* inputFile{};
 	int N, d, k;
 
@@ -405,18 +465,18 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	IProgramManager* manager{};
+	std::unique_ptr<IProgramManager> manager{};
 
 	try
 	{
 		manager = CreateManagerInstance(parameters);
-		manager->StartComputation(parameters.ComputationMethod);
+		auto membership = manager->StartComputation();
+		manager->SaveDataToOutputFile(membership);
 		std::cout << "it works!\n";
 	}
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what();
-		delete manager;
 		return 1;
 	}
 }
