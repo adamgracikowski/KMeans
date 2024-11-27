@@ -80,9 +80,20 @@
     <CudaCompile Include="kernel.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ClusteringCPU.cuh" />
+    <ClInclude Include="ClusteringGPU1.cuh" />
+    <ClInclude Include="CommonDeviceTools.cuh" />
+    <ClInclude Include="CreateManagerInstance.cuh" />
+    <ClInclude Include="DeviceDataGPU1.cuh" />
+    <ClInclude Include="DevicePointsCollection.cuh" />
+    <ClInclude Include="DeviceRawDataGPU.cuh" />
+    <ClInclude Include="DeviceRawDataGPU1.cuh" />
     <ClInclude Include="DeviceTimer.cuh" />
     <ClInclude Include="HostTimer.cuh" />
+    <ClInclude Include="ParseProgramParameters.cuh" />
     <ClInclude Include="Point.cuh" />
+    <ClInclude Include="ProgramManager.cuh" />
+    <ClInclude Include="ProgramParameters.cuh" />
     <ClInclude Include="Timer.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

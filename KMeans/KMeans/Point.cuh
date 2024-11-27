@@ -1,6 +1,12 @@
 #pragma once
 
+#include "cuda_runtime.h"
+
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+
 #define HOST_DEVICE __host__ __device__
+#define THREADS_IN_ONE_BLOCK 1024
 
 namespace DataStructures 
 {

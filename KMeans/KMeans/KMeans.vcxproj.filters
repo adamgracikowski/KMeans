@@ -7,6 +7,18 @@
     <Filter Include="Timers">
       <UniqueIdentifier>{ac23978c-f9c8-4479-87cd-6bc444652062}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GPU1">
+      <UniqueIdentifier>{cafeb9eb-fb0e-4f49-a885-239e51f23860}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CommonGPU">
+      <UniqueIdentifier>{71cc83da-9d1a-43de-8eda-0719764ffbb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CPU">
+      <UniqueIdentifier>{1f73d890-0f56-4c1c-9e44-1c28dae3284f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ProgramManagers">
+      <UniqueIdentifier>{e80b8a10-6187-4c72-af2f-4cbb92bd4b73}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Timer.cuh">
@@ -19,5 +31,38 @@
       <Filter>Timers</Filter>
     </ClInclude>
     <ClInclude Include="Point.cuh" />
+    <ClInclude Include="ClusteringGPU1.cuh">
+      <Filter>GPU1</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceRawDataGPU1.cuh">
+      <Filter>GPU1</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceDataGPU1.cuh">
+      <Filter>GPU1</Filter>
+    </ClInclude>
+    <ClInclude Include="DevicePointsCollection.cuh">
+      <Filter>CommonGPU</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceRawDataGPU.cuh">
+      <Filter>CommonGPU</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonDeviceTools.cuh">
+      <Filter>CommonGPU</Filter>
+    </ClInclude>
+    <ClInclude Include="ClusteringCPU.cuh">
+      <Filter>CPU</Filter>
+    </ClInclude>
+    <ClInclude Include="ProgramParameters.cuh">
+      <Filter>ProgramManagers</Filter>
+    </ClInclude>
+    <ClInclude Include="ParseProgramParameters.cuh">
+      <Filter>ProgramManagers</Filter>
+    </ClInclude>
+    <ClInclude Include="ProgramManager.cuh">
+      <Filter>ProgramManagers</Filter>
+    </ClInclude>
+    <ClInclude Include="CreateManagerInstance.cuh">
+      <Filter>ProgramManagers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
