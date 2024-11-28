@@ -4,13 +4,16 @@
 #include "ClusteringGPU1.cuh"
 #include "ClusteringGPU2.cuh"
 #include "ProgramParameters.cuh"
+#include "HostTimerManager.cuh"
 
 #include <cstdio>
 #include <stdexcept>
+#include <iomanip>
 
 class IProgramManager {
 public:
 	virtual int GetN() = 0;
+	virtual void DisplaySummary() = 0;
 	virtual thrust::host_vector<size_t> StartComputation() = 0;
 	virtual void LoadDataFromInputFile(FILE* inputFile) = 0;
 	virtual void SaveDataToOutputFile(thrust::host_vector<size_t>& membership) = 0;
@@ -35,13 +38,21 @@ public:
 		this->d = d;
 		this->k = k;
 		this->Parameters = parameters;
+
+		std::cout << std::setw(25) << std::left << "Number of points: " << N << std::endl;
+		std::cout << std::setw(25) << std::left << "Dimension: " << d << std::endl;
+		std::cout << std::setw(25) << std::left << "Number of centroids: " << k << std::endl;
+		std::cout << std::setw(25) << std::left << "Conmputation method: " << parameters.ComputationMethod << std::endl << std::endl;
 	}
 
-	int GetN() {
+	int GetN() override {
 		return N;
 	}
 
 	thrust::host_vector<size_t> StartComputation() override {
+		auto& timerManager = Timers::HostTimerManager::GetInstance();
+		timerManager.PerformClusteringTimer.Start();
+
 		if (Parameters.ComputationMethod == "cpu") {
 			CPU::ClusteringCPU<dim> clustering{};
 			auto membership = clustering.PerformClustering(Centroids, Points);
@@ -57,11 +68,34 @@ public:
 			auto membership = clustering.PerformClustering(Centroids, Points);
 			return membership;
 		}
+		else {
+			throw std::runtime_error("Invalid computation method " + Parameters.ComputationMethod);
+		}
 
-		throw std::runtime_error("Invalid computation method " + Parameters.ComputationMethod);
+		timerManager.PerformClusteringTimer.Stop();
+		std::cout << "Perform clustering time: " << timerManager.PerformClusteringTimer.ElapsedMiliseconds() << " ms" << std::endl;
+	}
+
+	void DisplaySummary() override {
+		auto& timerManager = HostTimerManager::GetInstance();
+
+		std::cout << std::endl;
+		std::cout << std::setw(40) << std::left << "Loading data from input file time: " << timerManager.LoadDataFromInputFileTimer.ElapsedMiliseconds() << " ms." << std::endl;
+		 
+		if (Parameters.ComputationMethod == "cpu") {
+
+			std::cout << std::setw(40) << std::left << "Computing new centroids time: " << timerManager.ComputeNewCentroidsTimer.ElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Updating centroids time: " << timerManager.UpdateCentroidsTimer.ElapsedMiliseconds() << " ms." << std::endl;
+		}
+
+		std::cout << std::setw(40) << std::left << "Performing clustering time: " << timerManager.PerformClusteringTimer.ElapsedMiliseconds() << " ms." << std::endl;
+		std::cout << std::setw(40) << std::left << "Saving data to output file time: " << timerManager.SaveDataToOutputFileTimer.ElapsedMiliseconds() << " ms." << std::endl;
 	}
 
 	void LoadDataFromInputFile(FILE* inputFile) override {
+		auto& timerManager = Timers::HostTimerManager::GetInstance();
+		timerManager.LoadDataFromInputFileTimer.Start();
+
 		if (Parameters.DataFormat == "txt") {
 			LoadDataFromTextFile(inputFile);
 		}
@@ -71,9 +105,19 @@ public:
 		else {
 			throw std::runtime_error("Invalid format " + Parameters.DataFormat);
 		}
+
+		timerManager.LoadDataFromInputFileTimer.Stop();
+		std::cout << "Loading data from input file time: " << timerManager.LoadDataFromInputFileTimer.ElapsedMiliseconds() << " ms" << std::endl;
 	}
+
 	void SaveDataToOutputFile(thrust::host_vector<size_t>& membership) override {
+		auto& timerManager = Timers::HostTimerManager::GetInstance();
+		timerManager.SaveDataToOutputFileTimer.Start();
+
 		SaveDataToTextFile(membership);
+
+		timerManager.SaveDataToOutputFileTimer.Stop();
+		std::cout << "Saving data to output file time: " << timerManager.SaveDataToOutputFileTimer.ElapsedMiliseconds() << " ms" << std::endl;
 	}
 
 	~ProgramManager() = default;

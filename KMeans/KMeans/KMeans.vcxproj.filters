@@ -76,5 +76,9 @@
     <ClInclude Include="DeviceRawDataGPU2.cuh">
       <Filter>GPU2</Filter>
     </ClInclude>
+    <ClInclude Include="CudaCheck.cuh" />
+    <ClInclude Include="HostTimerManager.cuh">
+      <Filter>Timers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

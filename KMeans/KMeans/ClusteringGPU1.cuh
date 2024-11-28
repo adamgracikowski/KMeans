@@ -90,6 +90,7 @@ namespace GPU1 {
 
 				// pomiar czasu na znalezienie najbli¿szych centroidów
 				changes = FindNearestCentroids(deviceData);
+
 				// stop pomiaru czasu na znalezienie najbli¿szych centroidów
 
 				std::cout << "-> Updating centroids..." << std::endl;
@@ -116,13 +117,21 @@ namespace GPU1 {
 	private:
 		void UpdateCentroids(DeviceDataGPU1<dim>& deviceData) {
 			unsigned blockCount = static_cast<unsigned>((deviceData.DeviceCentroids.GetSize() + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK);
+			
 			UpdateCentroidsKernel << <blockCount, THREADS_IN_ONE_BLOCK >> > (deviceData.ToDeviceRawData());
+			
+			CUDACHECK(cudaPeekAtLastError());
+			CUDACHECK(cudaDeviceSynchronize());
 		}
 
 		size_t FindNearestCentroids(DeviceDataGPU1<dim>& deviceData) {
 			unsigned blockCount = static_cast<unsigned>((deviceData.DevicePoints.GetSize() + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK);
 			
 			FindNearestCentroidsKernel<dim> << <blockCount, THREADS_IN_ONE_BLOCK, sizeof(float) * dim * deviceData.DeviceCentroids.GetSize() >> > (deviceData.ToDeviceRawData());
+			
+			CUDACHECK(cudaPeekAtLastError());
+			CUDACHECK(cudaDeviceSynchronize());
+
 			return ReduceChanges(deviceData.DeviceChanges);
 		}
 	};

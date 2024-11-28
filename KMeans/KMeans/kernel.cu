@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 		manager = CreateManagerInstance(parameters);
 		auto membership = manager->StartComputation();
 		manager->SaveDataToOutputFile(membership);
-		std::cout << "it works!\n";
+		manager->DisplaySummary();
 	}
 	catch (const std::exception& e)
 	{

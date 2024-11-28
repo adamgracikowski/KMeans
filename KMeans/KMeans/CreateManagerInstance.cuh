@@ -7,7 +7,7 @@
 #define GENERATE_CASE(M)														  \
     case M: {																	  \
         auto instance = std::make_unique<ProgramManager<M>>(N, d, k, parameters); \
-        instance->LoadDataFromInputFile(inputFile);								  \
+		instance->LoadDataFromInputFile(inputFile);								  \
         return instance;														  \
     }
 

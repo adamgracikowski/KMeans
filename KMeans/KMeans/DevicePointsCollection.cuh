@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommonDeviceTools.cuh"
+#include "CudaCheck.cuh"
 
 using namespace DataStructures;
 
@@ -17,8 +18,8 @@ namespace CommonGPU
 		DevicePointsCollection(size_t size)
 		{
 			Size = size;
-			cudaMalloc(&DevicePoints, sizeof(Point<dim>) * Size);
-			cudaMemset(DevicePoints, 0, sizeof(Point<dim>) * Size);
+			CUDACHECK(cudaMalloc(&DevicePoints, sizeof(Point<dim>) * Size));
+			CUDACHECK(cudaMemset(DevicePoints, 0, sizeof(Point<dim>) * Size));
 		}
 
 		DevicePointsCollection(thrust::host_vector<Point<dim>>& points)
@@ -27,7 +28,7 @@ namespace CommonGPU
 		}
 
 		~DevicePointsCollection() {
-			cudaFree(DevicePoints);
+			CUDACHECK(cudaFree(DevicePoints));
 		}
 
 		void operator=(thrust::host_vector<Point<dim>>& points) {
@@ -45,21 +46,22 @@ namespace CommonGPU
 		thrust::host_vector<Point<dim>> ToHost() {
 			float* deviceAoS{};
 
-			cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size);
+			CUDACHECK(cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size));
 
 			unsigned blockCount = static_cast<unsigned>((Size + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK);
 
 			// pomiar czasu na konwersjê pomiêdzy SoA -> AoS
 			SoA2AoSKernel<dim> << < blockCount, THREADS_IN_ONE_BLOCK >> > (DevicePoints, deviceAoS, Size);
+			CUDACHECK(cudaPeekAtLastError());
 			// stiop pomiar czasu na konwersjê pomiêdzy SoA -> AoS
 
 			thrust::host_vector<Point<dim>> points(Size);
 
 			// pomiar czasu na transfer danych z gpu na cpu
-			cudaMemcpy(points.data(), deviceAoS, sizeof(Point<dim>) * Size, cudaMemcpyDeviceToHost);
+			CUDACHECK(cudaMemcpy(points.data(), deviceAoS, sizeof(Point<dim>) * Size, cudaMemcpyDeviceToHost));
 			// stop pomiaru czasu na transfer danych z gpu na cpu
 
-			cudaFree(deviceAoS);
+			CUDACHECK(cudaFree(deviceAoS));
 
 			return points;
 		}
@@ -70,20 +72,22 @@ namespace CommonGPU
 
 			float* deviceAoS{};
 
-			cudaMalloc(&DevicePoints, sizeof(Point<dim>) * Size);
-			cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size);
+			CUDACHECK(cudaMalloc(&DevicePoints, sizeof(Point<dim>) * Size));
+			CUDACHECK(cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size));
 
 			// pomiar czasu na transfer danych z cpu na gpu
-			cudaMemcpy(deviceAoS, points.data(), sizeof(Point<dim>) * Size, cudaMemcpyHostToDevice);
+			CUDACHECK(cudaMemcpy(deviceAoS, points.data(), sizeof(Point<dim>) * Size, cudaMemcpyHostToDevice));
 			// stop pomiaru czasu na transfer danych z cpu na gpu
 
 			unsigned blockCount = static_cast<unsigned>((Size + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK);
 
 			// pomiar czasu na konwersjê pomiêdzy AoS -> SoA
 			AoS2SoAKernel<dim> << <blockCount, THREADS_IN_ONE_BLOCK >> > (deviceAoS, DevicePoints, Size);
+			CUDACHECK(cudaPeekAtLastError());
+			CUDACHECK(cudaDeviceSynchronize());
 			// stop pomiaru czasu na konwersjê pomiêdzy AoS -> SoA
 
-			cudaFree(deviceAoS);
+			CUDACHECK(cudaFree(deviceAoS));
 		}
 	};
 

@@ -12,7 +12,7 @@ namespace CommonGPU
 {
 	template<size_t dim>
 	__global__
-		void AoS2SoAKernel(float* deviceAoS, float* deviceSoA, size_t length) {
+	void AoS2SoAKernel(float* deviceAoS, float* deviceSoA, size_t length) {
 		// [x1, y1, z1, x2, y2, z2] -> [x1, x2, y1, y2, z1, z2]
 
 		size_t tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -26,7 +26,7 @@ namespace CommonGPU
 
 	template<size_t dim>
 	__global__
-		void SoA2AoSKernel(float* deviceSoA, float* deviceAoS, size_t length) {
+	void SoA2AoSKernel(float* deviceSoA, float* deviceAoS, size_t length) {
 		// [x1, x2, y1, y2, z1, z2] -> [x1, y1, z1, x2, y2, z2] 
 
 		size_t tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -40,7 +40,7 @@ namespace CommonGPU
 
 	template<size_t dim>
 	__device__
-		float SquaredCentroidDistance(DeviceRawDataGPU<dim>& deviceRawData, size_t pointIndex, size_t centroidIndex, float* sharedMemory, float* pointCoordinates) {
+	float SquaredCentroidDistance(DeviceRawDataGPU<dim>& deviceRawData, size_t pointIndex, size_t centroidIndex, float* sharedMemory, float* pointCoordinates) {
 		float distance = 0;
 
 		for (size_t i = 0; i < dim; ++i) {

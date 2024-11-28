@@ -1,7 +1,9 @@
 #pragma once
 
-#include "HostTimer.cuh"
+#include "HostTimerManager.cuh"
 #include "Point.cuh"
+
+#include <iomanip>
 
 using namespace Timers;
 using namespace DataStructures;
@@ -10,15 +12,13 @@ namespace CPU
 {
 	template<size_t dim>
 	class ClusteringCPU {
-		HostTimer ComputeNewCentroidsTimer{};
-		HostTimer UpdateCentroidsTimer{};
-
 	public:
-
 		thrust::host_vector<size_t> PerformClustering(
 			thrust::host_vector<Point<dim>>& centroids,
 			thrust::host_vector<Point<dim>>& points)
 		{
+			auto& timerManager = Timers::HostTimerManager::GetInstance();
+
 			thrust::host_vector<Point<dim>> updatedCentroids(centroids.size());
 			thrust::host_vector<size_t> updatedCounts(centroids.size());
 			thrust::host_vector<size_t> membership(points.size());
@@ -26,35 +26,34 @@ namespace CPU
 			size_t changes = points.size();
 			size_t iteration = 0, maxIterations = 100;
 
-			std::cout << "Starting clustering..." << std::endl;
-			std::cout << "Number of points: " << points.size() << ", Number of centroids: " << centroids.size() << std::endl;
+			std::cout << std::endl << "Starting clustering..." << std::endl;
 
 			while (iteration++ < maxIterations && changes != 0) {
 				std::cout << "\n=== Iteration: " << iteration << " ===" << std::endl;
 
 				changes = 0;
 
-				std::cout << "-> Computing new centroids..." << std::endl;
+				std::cout << " -> Computing new centroids..." << std::endl;
 
-				ComputeNewCentroidsTimer.Start();
+				timerManager.ComputeNewCentroidsTimer.Start();
 				ComputeNewCentroids(points, centroids, updatedCentroids, updatedCounts, membership, changes);
-				ComputeNewCentroidsTimer.Stop();
+				timerManager.ComputeNewCentroidsTimer.Stop();
 
-				std::cout << "   Computation time: " << ComputeNewCentroidsTimer.ElapsedMiliseconds() << " ms" << std::endl;
+				std::cout << std::setw(35) << std::left << "    Elapsed time: " <<  timerManager.ComputeNewCentroidsTimer.ElapsedMiliseconds() << " ms" << std::endl;
+					
+				std::cout << " -> Updating centroids..." << std::endl;
 
-				std::cout << "-> Updating centroids..." << std::endl;
-
-				UpdateCentroidsTimer.Start();
+				timerManager.UpdateCentroidsTimer.Start();
 				UpdateCentroids(centroids, updatedCentroids, updatedCounts);
-				UpdateCentroidsTimer.Stop();
+				timerManager.UpdateCentroidsTimer.Stop();
 
-				std::cout << "   Update time: " << UpdateCentroidsTimer.ElapsedMiliseconds() << " ms" << std::endl;
+				std::cout << std::setw(35) << std::left << "    Elapsed time: " << timerManager.UpdateCentroidsTimer.ElapsedMiliseconds() << " ms" << std::endl;
 
-				std::cout << "-> Changes in membership: " << changes << std::endl;
+				std::cout << std::setw(35) << std::left << "    Changes in membership: " << changes << std::endl;
 			}
 
 			if (changes == 0) {
-				std::cout << "\nClustering completed: No changes in membership." << std::endl;
+			    std::cout << "\nClustering completed: No changes in membership." << std::endl;
 			}
 			else {
 				std::cout << "\nClustering completed: Maximum number of iterations reached." << std::endl;
@@ -62,7 +61,6 @@ namespace CPU
 
 			return membership;
 		}
-
 
 	private:
 		size_t FindNearestCentroid(

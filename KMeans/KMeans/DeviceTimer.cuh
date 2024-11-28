@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Timer.cuh"
+#include "CudaCheck.cuh"
+
 #include <driver_types.h>
 #include <cuda_runtime_api.h>
 
@@ -31,7 +33,7 @@ namespace Timers
 		}
 	 
 		void Stop() override {
-			cudaEventRecord(StopEvent);
+			CUDACHECK(cudaEventRecord(StopEvent));
 			IsTotalElapsedMilisecondsUpdated = false;
 		}
 
@@ -63,23 +65,23 @@ namespace Timers
 
 	private:
 		void InitCudaEvents() {
-			cudaEventCreate(&StartEvent);
-			cudaEventCreate(&StopEvent);
+			CUDACHECK(cudaEventCreate(&StartEvent));
+			CUDACHECK(cudaEventCreate(&StopEvent));
 		}
 
 		void DestroyEvents() {
 			if (StartEvent) {
-				cudaEventDestroy(StartEvent);
+				CUDACHECK(cudaEventDestroy(StartEvent));
 				StartEvent = nullptr;
 			}
 			if (StopEvent) {
-				cudaEventDestroy(StopEvent);
+				CUDACHECK(cudaEventDestroy(StopEvent));
 				StopEvent = nullptr;
 			}
 		}
 
 		void UpdateTotalElapsedMiliseconds() {
-			cudaEventElapsedTime(&ElapsedMiliseconds, StartEvent, StopEvent);
+			CUDACHECK(cudaEventElapsedTime(&ElapsedMiliseconds, StartEvent, StopEvent));
 			TotalElapsedMiliseconds += ElapsedMiliseconds;
 		}
 

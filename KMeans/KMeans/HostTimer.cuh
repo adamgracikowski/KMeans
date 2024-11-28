@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Timer.cuh"
+
 #include <chrono>
 
 namespace Timers 
