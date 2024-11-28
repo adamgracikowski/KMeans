@@ -8,6 +8,16 @@
 #define HOST_DEVICE __host__ __device__
 #define THREADS_IN_ONE_BLOCK 1024
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true)
+{
+	if (code != cudaSuccess)
+	{
+		fprintf(stderr, "GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+		if (abort) exit(code);
+	}
+}
+
 namespace DataStructures 
 {
 	template<size_t dim>

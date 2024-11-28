@@ -9,6 +9,7 @@ namespace CommonGPU
 	template<size_t dim>
 	class DevicePointsCollection {
 	private:
+	public:
 		size_t Size{};
 		float* DevicePoints{};
 
@@ -26,7 +27,7 @@ namespace CommonGPU
 		}
 
 		~DevicePointsCollection() {
-			cudaFree(DeviePoints);
+			cudaFree(DevicePoints);
 		}
 
 		void operator=(thrust::host_vector<Point<dim>>& points) {
@@ -35,11 +36,6 @@ namespace CommonGPU
 
 		size_t GetSize() {
 			return Size;
-		}
-
-		__device__
-		static float& GetCoordinate(float* devicePoints, size_t size, size_t pointIndex, size_t dimensionIdx) {
-			return devicePoints[pointIndex + dimensionIdx * size];
 		}
 
 		float* RawAccess() {
@@ -51,7 +47,7 @@ namespace CommonGPU
 
 			cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size);
 
-			size_t blockCount = (Size + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK;
+			unsigned blockCount = static_cast<unsigned>((Size + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK);
 
 			// pomiar czasu na konwersjê pomiêdzy SoA -> AoS
 			SoA2AoSKernel<dim> << < blockCount, THREADS_IN_ONE_BLOCK >> > (DevicePoints, deviceAoS, Size);
@@ -64,6 +60,8 @@ namespace CommonGPU
 			// stop pomiaru czasu na transfer danych z gpu na cpu
 
 			cudaFree(deviceAoS);
+
+			return points;
 		}
 
 	private:
@@ -76,10 +74,10 @@ namespace CommonGPU
 			cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size);
 
 			// pomiar czasu na transfer danych z cpu na gpu
-			cudaMemcpy(deviceAos, points.data(), sizeof(Point<dim>) * Size, cudaMemcpyHostToDevice);
+			cudaMemcpy(deviceAoS, points.data(), sizeof(Point<dim>) * Size, cudaMemcpyHostToDevice);
 			// stop pomiaru czasu na transfer danych z cpu na gpu
 
-			size_t blockCount = (Size + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK;
+			unsigned blockCount = static_cast<unsigned>((Size + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK);
 
 			// pomiar czasu na konwersjê pomiêdzy AoS -> SoA
 			AoS2SoAKernel<dim> << <blockCount, THREADS_IN_ONE_BLOCK >> > (deviceAoS, DevicePoints, Size);
@@ -88,4 +86,9 @@ namespace CommonGPU
 			cudaFree(deviceAoS);
 		}
 	};
+
+	__device__
+	float& GetCoordinate(float* devicePoints, size_t size, size_t pointIndex, size_t dimensionIdx) {
+		return devicePoints[pointIndex + dimensionIdx * size];
+	}
 }

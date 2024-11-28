@@ -11,7 +11,7 @@ namespace GPU1
 		DevicePointsCollection<dim> DevicePoints;
 		DevicePointsCollection<dim> DeviceCentroids;
 		DevicePointsCollection<dim> DeviceUpdatedCentroids;
-		thrust::device_vector<size_t> DeviceUpdatedCentroidsCounts;
+		thrust::device_vector<unsigned> DeviceUpdatedCentroidsCounts;
 		thrust::device_vector<size_t> DeviceMembership;
 		thrust::device_vector<size_t> DeviceChanges;
 		thrust::device_vector<size_t> DevicePointsPermutation;
@@ -25,7 +25,7 @@ namespace GPU1
 			DeviceChanges(hostPoints.size()),
 			DevicePointsPermutation(hostPoints.size())
 		{
-			thrust::copy_n(thrust::make_counting_iterator(0), DevicePoints.size(), DevicePointsPermutation.begin());
+			thrust::copy_n(thrust::make_counting_iterator(0), DevicePoints.GetSize(), DevicePointsPermutation.begin());
 		}
 
 		DeviceRawDataGPU1<dim> ToDeviceRawData() {

@@ -9,7 +9,7 @@ namespace CommonGPU
 		size_t CentroidsCount{};
 		float* DeviceCentroids{};
 		size_t* DeviceMembership{};
-		float* DeviceChanges{};
+		size_t* DeviceChanges{};
 		size_t* DevicePointsPermutation{};
 	};
 }

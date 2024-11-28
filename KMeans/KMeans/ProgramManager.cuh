@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ClusteringCPU.cuh"
+#include "ClusteringGPU1.cuh"
 #include "ProgramParameters.cuh"
 
 #include <cstdio>
@@ -40,6 +41,11 @@ public:
 		if (Parameters.ComputationMethod == "cpu") {
 			ClusteringCPU<dim> clustering{};
 			auto membership = clustering.PerformClustering(Points, Centroids);
+			return membership;
+		}
+		else if (Parameters.ComputationMethod == "gpu1") {
+			GPU1::ClusteringGPU1<dim> clustering{};
+			auto membership = clustering.PerformClustering(Centroids, Points);
 			return membership;
 		}
 

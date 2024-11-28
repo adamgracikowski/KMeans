@@ -2,6 +2,7 @@
 
 #include "Point.cuh"
 #include "DeviceRawDataGPU.cuh"
+#include "DevicePointsCollection.cuh"
 
 #include <cfloat>
 
@@ -39,8 +40,34 @@ namespace CommonGPU
 
 	template<size_t dim>
 	__device__
+		float SquaredCentroidDistance(DeviceRawDataGPU<dim>& deviceRawData, size_t pointIndex, size_t centroidIndex, float* sharedMemory, float* pointCoordinates) {
+		float distance = 0;
+
+		for (size_t i = 0; i < dim; ++i) {
+			float centroidCoordinate = GetCoordinate(
+				sharedMemory,
+				deviceRawData.CentroidsCount,
+				centroidIndex,
+				i
+			);
+
+			float difference = pointCoordinates[i] - centroidCoordinate;
+			distance += difference * difference;
+		}
+
+		return distance;
+	}
+
+	size_t ReduceChanges(thrust::device_vector<size_t>& deviceChanges) {
+		size_t reduced = thrust::reduce(deviceChanges.begin(), deviceChanges.end(), 0);
+		thrust::fill(deviceChanges.begin(), deviceChanges.end(), 0);
+		return reduced;
+	}
+
+	template<size_t dim>
+	__device__
 	void CopyCentroidsToSharedMemory(DeviceRawDataGPU<dim>& deviceRawData, float* sharedMemory) {
-		size_t blockCount = (deviceRawData.CentroidsCount + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK;
+		unsigned blockCount = static_cast<unsigned>((deviceRawData.CentroidsCount + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK);
 
 		for (size_t i = 0; i < dim; ++i) {
 			size_t offset = i * deviceRawData.CentroidsCount;
@@ -72,8 +99,8 @@ namespace CommonGPU
 
 		float pointCoordinates[dim];
 
-		for (size_t i = o; i < dim; ++i) {
-			pointCoordinates[i] = DevicePointsCollection<dim>::GetCoordinate(
+		for (size_t i = 0; i < dim; ++i) {
+			pointCoordinates[i] = GetCoordinate(
 				deviceRawData.DevicePoints,
 				deviceRawData.PointsCount,
 				deviceRawData.DevicePointsPermutation[pointIndex],
@@ -84,37 +111,11 @@ namespace CommonGPU
 		for (size_t i = 0; i < deviceRawData.CentroidsCount; ++i) {
 			float distance = SquaredCentroidDistance<dim>(deviceRawData, pointIndex, i, sharedMemory, pointCoordinates);
 			if (distance < nearestDistance) {
-				distence = nearestDistance;
+				nearestDistance = distance;
 				nearest = i;
 			}
 		}
 
 		return nearest;
-	}
-
-	template<size_t dim>
-	__device__
-	float SquaredCentroidDistance(DeviceRawDataGPU<dim>& deviceRawData, size_t pointIndex, size_t centroidIndex, float* sharedMemory, float* pointCoordinates) {
-		float distance{};
-
-		for (size_t i = o; i < dim; ++i) {
-			float centroidCoordinate = DevicePointsCollection<dim>::GetCoordinate(
-				sharedMemory, 
-				deviceRawData.CentroidsCount, 
-				centroidIndex, 
-				i
-			);
-
-			float difference = pointCoordinates[i] - centroidCoordinate;
-			distance += difference * difference;
-		}
-
-		return difference;
-	}
-
-	size_t ReduceChanges(thrust::device_vector<size_t>& deviceChanges) {
-		size_t reduced = thrust::reduce(deviceChanges.begin(), deviceChanges.end());
-		thrust::fill(deviceChanges.begin(), deviceChanges.end(), 0);
-		return reduced;
 	}
 }
