@@ -16,8 +16,8 @@ namespace CPU
 	public:
 
 		thrust::host_vector<size_t> PerformClustering(
-			thrust::host_vector<Point<dim>>& points,
-			thrust::host_vector<Point<dim>>& centroids)
+			thrust::host_vector<Point<dim>>& centroids,
+			thrust::host_vector<Point<dim>>& points)
 		{
 			thrust::host_vector<Point<dim>> updatedCentroids(centroids.size());
 			thrust::host_vector<size_t> updatedCounts(centroids.size());

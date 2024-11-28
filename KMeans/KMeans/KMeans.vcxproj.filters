@@ -19,6 +19,9 @@
     <Filter Include="ProgramManagers">
       <UniqueIdentifier>{e80b8a10-6187-4c72-af2f-4cbb92bd4b73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GPU2">
+      <UniqueIdentifier>{ffc73c5d-8b1a-47f9-b9fa-bbf55611b9a0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Timer.cuh">
@@ -63,6 +66,15 @@
     </ClInclude>
     <ClInclude Include="CreateManagerInstance.cuh">
       <Filter>ProgramManagers</Filter>
+    </ClInclude>
+    <ClInclude Include="ClusteringGPU2.cuh">
+      <Filter>GPU2</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceDataGPU2.cuh">
+      <Filter>GPU2</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceRawDataGPU2.cuh">
+      <Filter>GPU2</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

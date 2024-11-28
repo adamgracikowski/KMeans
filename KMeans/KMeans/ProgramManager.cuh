@@ -2,15 +2,15 @@
 
 #include "ClusteringCPU.cuh"
 #include "ClusteringGPU1.cuh"
+#include "ClusteringGPU2.cuh"
 #include "ProgramParameters.cuh"
 
 #include <cstdio>
 #include <stdexcept>
 
-using namespace CPU;
-
 class IProgramManager {
 public:
+	virtual int GetN() = 0;
 	virtual thrust::host_vector<size_t> StartComputation() = 0;
 	virtual void LoadDataFromInputFile(FILE* inputFile) = 0;
 	virtual void SaveDataToOutputFile(thrust::host_vector<size_t>& membership) = 0;
@@ -37,10 +37,14 @@ public:
 		this->Parameters = parameters;
 	}
 
+	int GetN() {
+		return N;
+	}
+
 	thrust::host_vector<size_t> StartComputation() override {
 		if (Parameters.ComputationMethod == "cpu") {
-			ClusteringCPU<dim> clustering{};
-			auto membership = clustering.PerformClustering(Points, Centroids);
+			CPU::ClusteringCPU<dim> clustering{};
+			auto membership = clustering.PerformClustering(Centroids, Points);
 			return membership;
 		}
 		else if (Parameters.ComputationMethod == "gpu1") {
@@ -48,8 +52,13 @@ public:
 			auto membership = clustering.PerformClustering(Centroids, Points);
 			return membership;
 		}
+		else if (Parameters.ComputationMethod == "gpu2") {
+			GPU2::ClusteringGPU2<dim> clustering{};
+			auto membership = clustering.PerformClustering(Centroids, Points);
+			return membership;
+		}
 
-		return thrust::host_vector<size_t>{};
+		throw std::runtime_error("Invalid computation method " + Parameters.ComputationMethod);
 	}
 
 	void LoadDataFromInputFile(FILE* inputFile) override {
@@ -63,7 +72,6 @@ public:
 			throw std::runtime_error("Invalid format " + Parameters.DataFormat);
 		}
 	}
-
 	void SaveDataToOutputFile(thrust::host_vector<size_t>& membership) override {
 		SaveDataToTextFile(membership);
 	}

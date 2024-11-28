@@ -51,13 +51,5 @@ namespace DataStructures
 
 			return *this;
 		}
-
-	private:
-		HOST_DEVICE
-		Point(const float coordinates[dim]) {
-			for (int i = 0; i < dim; i++) {
-				Coordinates[i] = coordinates[i];
-			}
-		}
 	};
 }

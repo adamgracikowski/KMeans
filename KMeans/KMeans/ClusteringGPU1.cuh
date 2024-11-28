@@ -3,8 +3,6 @@
 #include "DeviceDataGPU1.cuh"
 #include "CommonDeviceTools.cuh"
 
-#include <cuda/atomic>
-
 namespace GPU1 {
 	template<size_t dim>
 	__global__

@@ -82,12 +82,15 @@
   <ItemGroup>
     <ClInclude Include="ClusteringCPU.cuh" />
     <ClInclude Include="ClusteringGPU1.cuh" />
+    <ClInclude Include="ClusteringGPU2.cuh" />
     <ClInclude Include="CommonDeviceTools.cuh" />
     <ClInclude Include="CreateManagerInstance.cuh" />
     <ClInclude Include="DeviceDataGPU1.cuh" />
+    <ClInclude Include="DeviceDataGPU2.cuh" />
     <ClInclude Include="DevicePointsCollection.cuh" />
     <ClInclude Include="DeviceRawDataGPU.cuh" />
     <ClInclude Include="DeviceRawDataGPU1.cuh" />
+    <ClInclude Include="DeviceRawDataGPU2.cuh" />
     <ClInclude Include="DeviceTimer.cuh" />
     <ClInclude Include="HostTimer.cuh" />
     <ClInclude Include="ParseProgramParameters.cuh" />
