@@ -13,7 +13,7 @@ def process_input_file_text(file_path):
     :return: Tuple (N, d, k, points) where:
         - N: Number of points.
         - d: Number of dimensions for each point.
-        - k: Number of centroids (to skip).
+        - k: Number of centroids.
         - points: List of points as lists of floats.
     """
     try:
@@ -26,9 +26,6 @@ def process_input_file_text(file_path):
             
             if N <= 0 or d <= 0 or k <= 0:
                 raise ValueError("N, d, and k must be positive integers.")
-            
-            for i in range(k):
-                file.readline()
             
             points = []
             for i in range(N):
