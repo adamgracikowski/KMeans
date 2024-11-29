@@ -74,9 +74,6 @@ def process_input_file_binary(file_path):
             if N <= 0 or d <= 0 or k <= 0:
                 raise ValueError("N, d, and k must be positive integers.")
             
-            skip_bytes = k * d * 4
-            file.seek(skip_bytes, 1)
-            
             points = []
             for i in range(N):
                 point_data = file.read(4 * d)
