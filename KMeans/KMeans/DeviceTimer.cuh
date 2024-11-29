@@ -14,46 +14,46 @@ namespace Timers
 		cudaEvent_t StopEvent{ nullptr };
 
 		size_t StartCounter{};
-		float ElapsedMiliseconds{};
-		float TotalElapsedMiliseconds{};
-		bool IsTotalElapsedMilisecondsUpdated{};
+		float MilisecondsElapsed{};
+		float TotalMilisecondsElapsed{};
+		bool IsTotalMilisecondsElapsedUpdated{};
 
 	public:
 
 		void Start() override {
 			if (StartCounter > 0) {
-				UpdateTotalElapsedMiliseconds();
+				UpdateTotalMilisecondsElapsed();
 				DestroyEvents();
 			}
 
 			InitCudaEvents();
 			StartCounter++;
 
-			cudaEventRecord(StartEvent);
+			CUDACHECK(cudaEventRecord(StartEvent));
 		}
 	 
 		void Stop() override {
 			CUDACHECK(cudaEventRecord(StopEvent));
-			IsTotalElapsedMilisecondsUpdated = false;
+			IsTotalMilisecondsElapsedUpdated = false;
 		}
 
 		float ElapsedMiliseconds() override {
-			if (!IsTotalElapsedMilisecondsUpdated) {
-				UpdateTotalElapsedMiliseconds();
-				IsTotalElapsedMilisecondsUpdated = true;
+			if (!IsTotalMilisecondsElapsedUpdated) {
+				UpdateTotalMilisecondsElapsed();
+				IsTotalMilisecondsElapsedUpdated = true;
 			}
 
-			return TotalElapsedMiliseconds;
+			return TotalMilisecondsElapsed;
 		}
 
 		void Reset() override {
-			TotalElapsedMiliseconds = 0;
+			TotalMilisecondsElapsed = 0;
 
 			if (StartCounter == 0) return;
 
 			DestroyEvents();
 			StartCounter = 0;
-			IsTotalElapsedMilisecondsUpdated = false;
+			IsTotalMilisecondsElapsedUpdated = false;
 		}
 
 		~DeviceTimer() override {
@@ -70,20 +70,19 @@ namespace Timers
 		}
 
 		void DestroyEvents() {
-			if (StartEvent) {
+			if (StartEvent != nullptr) {
 				CUDACHECK(cudaEventDestroy(StartEvent));
 				StartEvent = nullptr;
 			}
-			if (StopEvent) {
+			if (StopEvent != nullptr) {
 				CUDACHECK(cudaEventDestroy(StopEvent));
 				StopEvent = nullptr;
 			}
 		}
 
-		void UpdateTotalElapsedMiliseconds() {
-			CUDACHECK(cudaEventElapsedTime(&ElapsedMiliseconds, StartEvent, StopEvent));
-			TotalElapsedMiliseconds += ElapsedMiliseconds;
+		void UpdateTotalMilisecondsElapsed() {
+			CUDACHECK(cudaEventElapsedTime(&MilisecondsElapsed, StartEvent, StopEvent));
+			TotalMilisecondsElapsed += MilisecondsElapsed;
 		}
-
 	};
 }

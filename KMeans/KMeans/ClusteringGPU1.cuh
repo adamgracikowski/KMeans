@@ -2,6 +2,9 @@
 
 #include "DeviceDataGPU1.cuh"
 #include "CommonDeviceTools.cuh"
+#include "HostTimerManager.cuh"
+
+#include <iomanip>
 
 namespace GPU1 {
 	template<size_t dim>
@@ -73,12 +76,14 @@ namespace GPU1 {
 	public:
 		template<size_t dim>
 		thrust::host_vector<size_t> PerformClustering(thrust::host_vector<Point<dim>>& hostCentroids, thrust::host_vector<Point<dim>>& hostPoints) {
+			auto& timerManager = Timers::HostTimerManager::GetInstance();
+			
 			DeviceDataGPU1<dim> deviceData(hostCentroids, hostPoints);
 			
 			size_t changes = hostPoints.size();
 			size_t iteration = 0, maxIterations = 100;
 
-			std::cout << "Starting clustering..." << std::endl;
+			std::cout << std::endl << "Starting clustering..." << std::endl;
 			std::cout << "Number of points: " << hostPoints.size() << ", Number of centroids: " << hostCentroids.size() << std::endl;
 
 			while (iteration++ < maxIterations && changes != 0) {
@@ -86,20 +91,25 @@ namespace GPU1 {
 
 				changes = 0;
 
-				std::cout << "-> Computing new centroids..." << std::endl;
+				std::cout << " -> Computing new centroids..." << std::endl;
 
-				// pomiar czasu na znalezienie najbli¿szych centroidów
+				timerManager.ComputeNewCentroidsKernelTimer.Start();
+
 				changes = FindNearestCentroids(deviceData);
 
-				// stop pomiaru czasu na znalezienie najbli¿szych centroidów
+				timerManager.ComputeNewCentroidsKernelTimer.Stop();
 
-				std::cout << "-> Updating centroids..." << std::endl;
+				// std::cout << std::setw(35) << std::left << "    Elapsed time: " << timerManager.ComputeNewCentroidsKernelTimer.ElapsedMiliseconds() << " ms" << std::endl;
+				std::cout << " -> Updating centroids..." << std::endl;
 
-				std::cout << "-> Changes in membership: " << changes << std::endl;
+				timerManager.UpdateCentroidsKernelTimer.Start();
 
-				// pomiar czasu na aktualizacjê po³o¿enia centroidów
 				UpdateCentroids(deviceData);
-				// stop pomiaru czasu na aktualizacjê po³o¿enia centroidów
+
+				timerManager.UpdateCentroidsKernelTimer.Stop();
+
+				// std::cout << std::setw(35) << std::left << "    Elapsed time: " << timerManager.UpdateCentroidsKernelTimer.ElapsedMiliseconds() << " ms" << std::endl;
+				std::cout << std::setw(35) << std::left << "    Changes in membership: " << changes << std::endl;
 			}
 
 			if (changes == 0) {

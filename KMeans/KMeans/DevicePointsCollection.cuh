@@ -2,6 +2,7 @@
 
 #include "CommonDeviceTools.cuh"
 #include "CudaCheck.cuh"
+#include "HostTimerManager.cuh"
 
 using namespace DataStructures;
 
@@ -44,22 +45,29 @@ namespace CommonGPU
 		}
 
 		thrust::host_vector<Point<dim>> ToHost() {
+			auto& timerManager = Timers::HostTimerManager::GetInstance();
+			
 			float* deviceAoS{};
 
 			CUDACHECK(cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size));
 
 			unsigned blockCount = static_cast<unsigned>((Size + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK);
 
-			// pomiar czasu na konwersjê pomiêdzy SoA -> AoS
+			timerManager.SoA2AoSKernelTimer.Start();
+
 			SoA2AoSKernel<dim> << < blockCount, THREADS_IN_ONE_BLOCK >> > (DevicePoints, deviceAoS, Size);
 			CUDACHECK(cudaPeekAtLastError());
-			// stiop pomiar czasu na konwersjê pomiêdzy SoA -> AoS
+			CUDACHECK(cudaDeviceSynchronize());
+
+			timerManager.SoA2AoSKernelTimer.Stop();
 
 			thrust::host_vector<Point<dim>> points(Size);
 
-			// pomiar czasu na transfer danych z gpu na cpu
+			timerManager.Device2HostDataTransfer.Start();
+
 			CUDACHECK(cudaMemcpy(points.data(), deviceAoS, sizeof(Point<dim>) * Size, cudaMemcpyDeviceToHost));
-			// stop pomiaru czasu na transfer danych z gpu na cpu
+
+			timerManager.Device2HostDataTransfer.Stop();
 
 			CUDACHECK(cudaFree(deviceAoS));
 
@@ -68,6 +76,8 @@ namespace CommonGPU
 
 	private:
 		void FromHost(thrust::host_vector<Point<dim>>& points) {
+			auto& timerManager = Timers::HostTimerManager::GetInstance();
+
 			Size = points.size();
 
 			float* deviceAoS{};
@@ -75,17 +85,21 @@ namespace CommonGPU
 			CUDACHECK(cudaMalloc(&DevicePoints, sizeof(Point<dim>) * Size));
 			CUDACHECK(cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size));
 
-			// pomiar czasu na transfer danych z cpu na gpu
+			timerManager.Host2DeviceDataTransfer.Start();
+
 			CUDACHECK(cudaMemcpy(deviceAoS, points.data(), sizeof(Point<dim>) * Size, cudaMemcpyHostToDevice));
-			// stop pomiaru czasu na transfer danych z cpu na gpu
+
+			timerManager.Host2DeviceDataTransfer.Stop();
 
 			unsigned blockCount = static_cast<unsigned>((Size + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK);
 
-			// pomiar czasu na konwersjê pomiêdzy AoS -> SoA
+			timerManager.AoS2SoAKernelTimer.Start();
+
 			AoS2SoAKernel<dim> << <blockCount, THREADS_IN_ONE_BLOCK >> > (deviceAoS, DevicePoints, Size);
 			CUDACHECK(cudaPeekAtLastError());
 			CUDACHECK(cudaDeviceSynchronize());
-			// stop pomiaru czasu na konwersjê pomiêdzy AoS -> SoA
+
+			timerManager.AoS2SoAKernelTimer.Stop();
 
 			CUDACHECK(cudaFree(deviceAoS));
 		}

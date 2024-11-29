@@ -53,46 +53,58 @@ public:
 		auto& timerManager = Timers::HostTimerManager::GetInstance();
 		timerManager.PerformClusteringTimer.Start();
 
+		thrust::host_vector<size_t> membership{};
+
 		if (Parameters.ComputationMethod == "cpu") {
 			CPU::ClusteringCPU<dim> clustering{};
-			auto membership = clustering.PerformClustering(Centroids, Points);
-			return membership;
+			membership = clustering.PerformClustering(Centroids, Points);
 		}
 		else if (Parameters.ComputationMethod == "gpu1") {
 			GPU1::ClusteringGPU1<dim> clustering{};
-			auto membership = clustering.PerformClustering(Centroids, Points);
-			return membership;
+			membership = clustering.PerformClustering(Centroids, Points);
+			CUDACHECK(cudaDeviceSynchronize());
 		}
 		else if (Parameters.ComputationMethod == "gpu2") {
 			GPU2::ClusteringGPU2<dim> clustering{};
-			auto membership = clustering.PerformClustering(Centroids, Points);
-			return membership;
+			membership = clustering.PerformClustering(Centroids, Points);
+			CUDACHECK(cudaDeviceSynchronize());
 		}
 		else {
 			throw std::runtime_error("Invalid computation method " + Parameters.ComputationMethod);
 		}
 
 		timerManager.PerformClusteringTimer.Stop();
-		std::cout << "Perform clustering time: " << timerManager.PerformClusteringTimer.ElapsedMiliseconds() << " ms" << std::endl;
+		return membership;
 	}
 
 	void DisplaySummary() override {
 		auto& timerManager = HostTimerManager::GetInstance();
 
 		std::cout << std::endl;
-		std::cout << std::setw(40) << std::left << "Loading data from input file time: " << timerManager.LoadDataFromInputFileTimer.ElapsedMiliseconds() << " ms." << std::endl;
 		 
 		if (Parameters.ComputationMethod == "cpu") {
 
 			std::cout << std::setw(40) << std::left << "Computing new centroids time: " << timerManager.ComputeNewCentroidsTimer.ElapsedMiliseconds() << " ms." << std::endl;
 			std::cout << std::setw(40) << std::left << "Updating centroids time: " << timerManager.UpdateCentroidsTimer.ElapsedMiliseconds() << " ms." << std::endl;
 		}
+		else if(Parameters.ComputationMethod == "gpu1"){
+			std::cout << std::setw(40) << std::left << "Computing new centroids time: " << timerManager.ComputeNewCentroidsKernelTimer.ElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Updating centroids time: " << timerManager.UpdateCentroidsKernelTimer.ElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "SoA to AoS conversion time: " << timerManager.SoA2AoSKernelTimer.ElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "AoS to SoA conversion time: " << timerManager.AoS2SoAKernelTimer.ElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Host to Device transfer time: " << timerManager.Host2DeviceDataTransfer.ElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Device to Host transfer time: " << timerManager.Device2HostDataTransfer.ElapsedMiliseconds() << " ms." << std::endl;
+
+		}
 
 		std::cout << std::setw(40) << std::left << "Performing clustering time: " << timerManager.PerformClusteringTimer.ElapsedMiliseconds() << " ms." << std::endl;
 		std::cout << std::setw(40) << std::left << "Saving data to output file time: " << timerManager.SaveDataToOutputFileTimer.ElapsedMiliseconds() << " ms." << std::endl;
+		std::cout << std::setw(40) << std::left << "Loading data from input file time: " << timerManager.LoadDataFromInputFileTimer.ElapsedMiliseconds() << " ms." << std::endl;
 	}
 
 	void LoadDataFromInputFile(FILE* inputFile) override {
+		std::cout << "Loading data from input file..." << std::endl;
+
 		auto& timerManager = Timers::HostTimerManager::GetInstance();
 		timerManager.LoadDataFromInputFileTimer.Start();
 
@@ -107,7 +119,6 @@ public:
 		}
 
 		timerManager.LoadDataFromInputFileTimer.Stop();
-		std::cout << "Loading data from input file time: " << timerManager.LoadDataFromInputFileTimer.ElapsedMiliseconds() << " ms" << std::endl;
 	}
 
 	void SaveDataToOutputFile(thrust::host_vector<size_t>& membership) override {
@@ -117,7 +128,6 @@ public:
 		SaveDataToTextFile(membership);
 
 		timerManager.SaveDataToOutputFileTimer.Stop();
-		std::cout << "Saving data to output file time: " << timerManager.SaveDataToOutputFileTimer.ElapsedMiliseconds() << " ms" << std::endl;
 	}
 
 	~ProgramManager() = default;
