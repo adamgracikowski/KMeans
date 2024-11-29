@@ -42,8 +42,8 @@ public:
 		std::cout << std::setw(25) << std::left << "Number of points: " << N << std::endl;
 		std::cout << std::setw(25) << std::left << "Dimension: " << d << std::endl;
 		std::cout << std::setw(25) << std::left << "Number of centroids: " << k << std::endl;
-		std::cout << std::setw(25) << std::left << "Computation method: " << parameters.ComputationMethod << std::endl << std::endl;
-		std::cout << std::setw(25) << std::left << "Data format: " << parameters.DataFormat << std::endl << std::endl;
+		std::cout << std::setw(25) << std::left << "Computation method: " << parameters.ComputationMethod << std::endl;
+		std::cout << std::setw(25) << std::left << "Data format: " << parameters.DataFormat << std::endl << std::endl << std::endl;
 	}
 
 	int GetN() override {
@@ -82,13 +82,13 @@ public:
 		auto& timerManager = HostTimerManager::GetInstance();
 
 		std::cout << std::endl;
-		 
+
 		if (Parameters.ComputationMethod == "cpu") {
 
 			std::cout << std::setw(40) << std::left << "Computing new centroids time: " << timerManager.ComputeNewCentroidsTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
 			std::cout << std::setw(40) << std::left << "Updating centroids time: " << timerManager.UpdateCentroidsTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
 		}
-		else if(Parameters.ComputationMethod == "gpu1"){
+		else if (Parameters.ComputationMethod == "gpu1") {
 			std::cout << std::setw(40) << std::left << "Computing new centroids time: " << timerManager.ComputeNewCentroidsKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
 			std::cout << std::setw(40) << std::left << "Updating centroids time: " << timerManager.UpdateCentroidsKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
 			std::cout << std::setw(40) << std::left << "SoA to AoS conversion time: " << timerManager.SoA2AoSKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
@@ -190,11 +190,11 @@ private:
 		}
 
 		for (const auto& centroid : Centroids) {
-			for (size_t i = 0; i < dim - 1; ++i) {
+			for (size_t i = 0; i < dim; ++i) {
 				fprintf(outputFile, "%.4f ", centroid.Coordinates[i]);
 			}
 
-			fprintf(outputFile, "%.4f\n", centroid.Coordinates[dim - 1]);
+			fprintf(outputFile, "\n");
 		}
 
 		for (const auto& m : membership) {
