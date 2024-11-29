@@ -42,7 +42,8 @@ public:
 		std::cout << std::setw(25) << std::left << "Number of points: " << N << std::endl;
 		std::cout << std::setw(25) << std::left << "Dimension: " << d << std::endl;
 		std::cout << std::setw(25) << std::left << "Number of centroids: " << k << std::endl;
-		std::cout << std::setw(25) << std::left << "Conmputation method: " << parameters.ComputationMethod << std::endl << std::endl;
+		std::cout << std::setw(25) << std::left << "Computation method: " << parameters.ComputationMethod << std::endl << std::endl;
+		std::cout << std::setw(25) << std::left << "Data format: " << parameters.DataFormat << std::endl << std::endl;
 	}
 
 	int GetN() override {
@@ -84,22 +85,22 @@ public:
 		 
 		if (Parameters.ComputationMethod == "cpu") {
 
-			std::cout << std::setw(40) << std::left << "Computing new centroids time: " << timerManager.ComputeNewCentroidsTimer.ElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "Updating centroids time: " << timerManager.UpdateCentroidsTimer.ElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Computing new centroids time: " << timerManager.ComputeNewCentroidsTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Updating centroids time: " << timerManager.UpdateCentroidsTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
 		}
 		else if(Parameters.ComputationMethod == "gpu1"){
-			std::cout << std::setw(40) << std::left << "Computing new centroids time: " << timerManager.ComputeNewCentroidsKernelTimer.ElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "Updating centroids time: " << timerManager.UpdateCentroidsKernelTimer.ElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "SoA to AoS conversion time: " << timerManager.SoA2AoSKernelTimer.ElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "AoS to SoA conversion time: " << timerManager.AoS2SoAKernelTimer.ElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "Host to Device transfer time: " << timerManager.Host2DeviceDataTransfer.ElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "Device to Host transfer time: " << timerManager.Device2HostDataTransfer.ElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Computing new centroids time: " << timerManager.ComputeNewCentroidsKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Updating centroids time: " << timerManager.UpdateCentroidsKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "SoA to AoS conversion time: " << timerManager.SoA2AoSKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "AoS to SoA conversion time: " << timerManager.AoS2SoAKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Host to Device transfer time: " << timerManager.Host2DeviceDataTransfer.TotalElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Device to Host transfer time: " << timerManager.Device2HostDataTransfer.TotalElapsedMiliseconds() << " ms." << std::endl;
 
 		}
 
-		std::cout << std::setw(40) << std::left << "Performing clustering time: " << timerManager.PerformClusteringTimer.ElapsedMiliseconds() << " ms." << std::endl;
-		std::cout << std::setw(40) << std::left << "Saving data to output file time: " << timerManager.SaveDataToOutputFileTimer.ElapsedMiliseconds() << " ms." << std::endl;
-		std::cout << std::setw(40) << std::left << "Loading data from input file time: " << timerManager.LoadDataFromInputFileTimer.ElapsedMiliseconds() << " ms." << std::endl;
+		std::cout << std::setw(40) << std::left << "Performing clustering time: " << timerManager.PerformClusteringTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+		std::cout << std::setw(40) << std::left << "Saving data to output file time: " << timerManager.SaveDataToOutputFileTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+		std::cout << std::setw(40) << std::left << "Loading data from input file time: " << timerManager.LoadDataFromInputFileTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
 	}
 
 	void LoadDataFromInputFile(FILE* inputFile) override {

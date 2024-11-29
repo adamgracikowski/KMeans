@@ -99,7 +99,7 @@ namespace GPU1 {
 
 				timerManager.ComputeNewCentroidsKernelTimer.Stop();
 
-				// std::cout << std::setw(35) << std::left << "    Elapsed time: " << timerManager.ComputeNewCentroidsKernelTimer.ElapsedMiliseconds() << " ms" << std::endl;
+				std::cout << std::setw(35) << std::left << "    Elapsed time: " << timerManager.ComputeNewCentroidsKernelTimer.ElapsedMiliseconds() << " ms" << std::endl;
 				std::cout << " -> Updating centroids..." << std::endl;
 
 				timerManager.UpdateCentroidsKernelTimer.Start();
@@ -108,7 +108,7 @@ namespace GPU1 {
 
 				timerManager.UpdateCentroidsKernelTimer.Stop();
 
-				// std::cout << std::setw(35) << std::left << "    Elapsed time: " << timerManager.UpdateCentroidsKernelTimer.ElapsedMiliseconds() << " ms" << std::endl;
+				std::cout << std::setw(35) << std::left << "    Elapsed time: " << timerManager.UpdateCentroidsKernelTimer.ElapsedMiliseconds() << " ms" << std::endl;
 				std::cout << std::setw(35) << std::left << "    Changes in membership: " << changes << std::endl;
 			}
 
