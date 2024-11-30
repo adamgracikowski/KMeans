@@ -1,6 +1,6 @@
 #pragma once
 
-#include "HostTimerManager.cuh"
+#include "TimerManager.cuh"
 #include "Point.cuh"
 
 #include <iomanip>
@@ -17,7 +17,7 @@ namespace CPU
 			thrust::host_vector<Point<dim>>& centroids,
 			thrust::host_vector<Point<dim>>& points)
 		{
-			auto& timerManager = Timers::HostTimerManager::GetInstance();
+			auto& timerManager = Timers::TimerManager::GetInstance();
 
 			thrust::host_vector<Point<dim>> updatedCentroids(centroids.size());
 			thrust::host_vector<size_t> updatedCounts(centroids.size());
@@ -40,6 +40,7 @@ namespace CPU
 				timerManager.ComputeNewCentroidsTimer.Stop();
 
 				std::cout << std::setw(35) << std::left << "    Elapsed time: " <<  timerManager.ComputeNewCentroidsTimer.ElapsedMiliseconds() << " ms" << std::endl;
+				std::cout << std::setw(35) << std::left << "    Changes in membership: " << changes << std::endl;
 				std::cout << " -> Updating centroids..." << std::endl;
 
 				timerManager.UpdateCentroidsTimer.Start();
@@ -47,7 +48,6 @@ namespace CPU
 				timerManager.UpdateCentroidsTimer.Stop();
 
 				std::cout << std::setw(35) << std::left << "    Elapsed time: " << timerManager.UpdateCentroidsTimer.ElapsedMiliseconds() << " ms" << std::endl;
-				std::cout << std::setw(35) << std::left << "    Changes in membership: " << changes << std::endl;
 			}
 
 			if (changes == 0) {

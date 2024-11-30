@@ -2,7 +2,7 @@
 
 #include "CommonDeviceTools.cuh"
 #include "CudaCheck.cuh"
-#include "HostTimerManager.cuh"
+#include "TimerManager.cuh"
 
 using namespace DataStructures;
 
@@ -45,7 +45,7 @@ namespace CommonGPU
 		}
 
 		thrust::host_vector<Point<dim>> ToHost() {
-			auto& timerManager = Timers::HostTimerManager::GetInstance();
+			auto& timerManager = Timers::TimerManager::GetInstance();
 			
 			float* deviceAoS{};
 
@@ -76,7 +76,7 @@ namespace CommonGPU
 
 	private:
 		void FromHost(thrust::host_vector<Point<dim>>& points) {
-			auto& timerManager = Timers::HostTimerManager::GetInstance();
+			auto& timerManager = Timers::TimerManager::GetInstance();
 
 			Size = points.size();
 

@@ -2,7 +2,7 @@
 
 #include "DeviceDataGPU1.cuh"
 #include "CommonDeviceTools.cuh"
-#include "HostTimerManager.cuh"
+#include "TimerManager.cuh"
 
 #include <iomanip>
 
@@ -75,12 +75,18 @@ namespace GPU1 {
 	class ClusteringGPU1 {
 	public:
 		template<size_t dim>
-		thrust::host_vector<size_t> PerformClustering(thrust::host_vector<Point<dim>>& hostCentroids, thrust::host_vector<Point<dim>>& hostPoints) {
-			auto& timerManager = Timers::HostTimerManager::GetInstance();
+		thrust::host_vector<size_t> PerformClustering(
+			thrust::host_vector<Point<dim>>& hostCentroids, 
+			thrust::host_vector<Point<dim>>& hostPoints) 
+		{
+			auto& timerManager = Timers::TimerManager::GetInstance();
+
+			size_t k = hostCentroids.size();
+			size_t N = hostPoints.size();
 			
 			DeviceDataGPU1<dim> deviceData(hostCentroids, hostPoints);
-			
-			size_t changes = hostPoints.size();
+
+			size_t changes = N;
 			size_t iteration = 0, maxIterations = 100;
 
 			std::cout << std::endl << "Starting clustering..." << std::endl;
@@ -98,7 +104,10 @@ namespace GPU1 {
 
 				timerManager.ComputeNewCentroidsKernelTimer.Stop();
 
-				std::cout << std::setw(35) << std::left << "    Elapsed time: " << timerManager.ComputeNewCentroidsKernelTimer.ElapsedMiliseconds() << " ms" << std::endl;
+				std::cout << std::setw(35) << std::left << "    Elapsed time: " 
+					<< timerManager.ComputeNewCentroidsKernelTimer.ElapsedMiliseconds() << " ms" << std::endl;
+				std::cout << std::setw(35) << std::left << "    Changes in membership: " 
+					<< changes << std::endl;
 				std::cout << " -> Updating centroids..." << std::endl;
 
 				timerManager.UpdateCentroidsKernelTimer.Start();
@@ -107,8 +116,8 @@ namespace GPU1 {
 
 				timerManager.UpdateCentroidsKernelTimer.Stop();
 
-				std::cout << std::setw(35) << std::left << "    Elapsed time: " << timerManager.UpdateCentroidsKernelTimer.ElapsedMiliseconds() << " ms" << std::endl;
-				std::cout << std::setw(35) << std::left << "    Changes in membership: " << changes << std::endl;
+				std::cout << std::setw(35) << std::left << "    Elapsed time: " 
+					<< timerManager.UpdateCentroidsKernelTimer.ElapsedMiliseconds() << " ms" << std::endl;
 			}
 
 			if (changes == 0) {
@@ -125,7 +134,9 @@ namespace GPU1 {
 
 	private:
 		void UpdateCentroids(DeviceDataGPU1<dim>& deviceData) {
-			unsigned blockCount = static_cast<unsigned>((deviceData.DeviceCentroids.GetSize() + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK);
+			unsigned blockCount = static_cast<unsigned>(
+				(deviceData.DeviceCentroids.GetSize() + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK
+			);
 			
 			UpdateCentroidsKernel << <blockCount, THREADS_IN_ONE_BLOCK >> > (deviceData.ToDeviceRawData());
 			
@@ -134,9 +145,15 @@ namespace GPU1 {
 		}
 
 		size_t FindNearestCentroids(DeviceDataGPU1<dim>& deviceData) {
-			unsigned blockCount = static_cast<unsigned>((deviceData.DevicePoints.GetSize() + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK);
+			unsigned blockCount = static_cast<unsigned>(
+				(deviceData.DevicePoints.GetSize() + THREADS_IN_ONE_BLOCK - 1) / THREADS_IN_ONE_BLOCK
+			);
 			
-			FindNearestCentroidsKernel<dim> << <blockCount, THREADS_IN_ONE_BLOCK, sizeof(float) * dim * deviceData.DeviceCentroids.GetSize() >> > (deviceData.ToDeviceRawData());
+			FindNearestCentroidsKernel<dim> << <
+				blockCount, 
+				THREADS_IN_ONE_BLOCK, 
+				sizeof(float) * dim * deviceData.DeviceCentroids.GetSize() 
+			>> > (deviceData.ToDeviceRawData());
 			
 			CUDACHECK(cudaPeekAtLastError());
 			CUDACHECK(cudaDeviceSynchronize());

@@ -87,14 +87,12 @@
     <ClInclude Include="CreateManagerInstance.cuh" />
     <ClInclude Include="CudaCheck.cuh" />
     <ClInclude Include="DeviceDataGPU1.cuh" />
-    <ClInclude Include="DeviceDataGPU2.cuh" />
     <ClInclude Include="DevicePointsCollection.cuh" />
     <ClInclude Include="DeviceRawDataGPU.cuh" />
     <ClInclude Include="DeviceRawDataGPU1.cuh" />
-    <ClInclude Include="DeviceRawDataGPU2.cuh" />
     <ClInclude Include="DeviceTimer.cuh" />
     <ClInclude Include="HostTimer.cuh" />
-    <ClInclude Include="HostTimerManager.cuh" />
+    <ClInclude Include="TimerManager.cuh" />
     <ClInclude Include="ParseProgramParameters.cuh" />
     <ClInclude Include="Point.cuh" />
     <ClInclude Include="ProgramManager.cuh" />

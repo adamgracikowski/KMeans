@@ -5,13 +5,13 @@
 
 namespace Timers
 {
-	class HostTimerManager {
+	class TimerManager {
 	private:
-		HostTimerManager() = default;
-		HostTimerManager(const HostTimerManager&) = delete;
-		HostTimerManager& operator=(const HostTimerManager&) = delete;
+		TimerManager() = default;
+		TimerManager(const TimerManager&) = delete;
+		TimerManager& operator=(const TimerManager&) = delete;
 
-		~HostTimerManager() {
+		~TimerManager() {
 			SoA2AoSKernelTimer.Reset();
 			Host2DeviceDataTransfer.Reset();
 			Device2HostDataTransfer.Reset();
@@ -34,8 +34,8 @@ namespace Timers
 		DeviceTimer ComputeNewCentroidsKernelTimer{};
 		DeviceTimer UpdateCentroidsKernelTimer{};
 
-		static HostTimerManager& GetInstance() {
-			static HostTimerManager instance;
+		static TimerManager& GetInstance() {
+			static TimerManager instance;
 			return instance;
 		}
 	};

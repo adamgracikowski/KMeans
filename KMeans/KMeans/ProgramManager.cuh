@@ -4,7 +4,7 @@
 #include "ClusteringGPU1.cuh"
 #include "ClusteringGPU2.cuh"
 #include "ProgramParameters.cuh"
-#include "HostTimerManager.cuh"
+#include "TimerManager.cuh"
 
 #include <cstdio>
 #include <stdexcept>
@@ -39,11 +39,16 @@ public:
 		this->k = k;
 		this->Parameters = parameters;
 
-		std::cout << std::setw(25) << std::left << "Number of points: " << N << std::endl;
-		std::cout << std::setw(25) << std::left << "Dimension: " << d << std::endl;
-		std::cout << std::setw(25) << std::left << "Number of centroids: " << k << std::endl;
-		std::cout << std::setw(25) << std::left << "Computation method: " << parameters.ComputationMethod << std::endl;
-		std::cout << std::setw(25) << std::left << "Data format: " << parameters.DataFormat << std::endl << std::endl << std::endl;
+		std::cout << std::setw(25) << std::left << "Number of points: " 
+			<< N << std::endl;
+		std::cout << std::setw(25) << std::left << "Dimension: " 
+			<< d << std::endl;
+		std::cout << std::setw(25) << std::left << "Number of centroids: " 
+			<< k << std::endl;
+		std::cout << std::setw(25) << std::left << "Computation method: " 
+			<< parameters.ComputationMethod << std::endl;
+		std::cout << std::setw(25) << std::left << "Data format: " 
+			<< parameters.DataFormat << std::endl << std::endl << std::endl;
 	}
 
 	int GetN() override {
@@ -51,7 +56,7 @@ public:
 	}
 
 	thrust::host_vector<size_t> StartComputation() override {
-		auto& timerManager = Timers::HostTimerManager::GetInstance();
+		auto& timerManager = Timers::TimerManager::GetInstance();
 		timerManager.PerformClusteringTimer.Start();
 
 		thrust::host_vector<size_t> membership{};
@@ -79,34 +84,53 @@ public:
 	}
 
 	void DisplaySummary() override {
-		auto& timerManager = HostTimerManager::GetInstance();
+		auto& timerManager = TimerManager::GetInstance();
 
 		std::cout << std::endl;
 
 		if (Parameters.ComputationMethod == "cpu") {
 
-			std::cout << std::setw(40) << std::left << "Computing new centroids time: " << timerManager.ComputeNewCentroidsTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "Updating centroids time: " << timerManager.UpdateCentroidsTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
-		}
-		else if (Parameters.ComputationMethod == "gpu1") {
-			std::cout << std::setw(40) << std::left << "Computing new centroids time: " << timerManager.ComputeNewCentroidsKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "Updating centroids time: " << timerManager.UpdateCentroidsKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "SoA to AoS conversion time: " << timerManager.SoA2AoSKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "AoS to SoA conversion time: " << timerManager.AoS2SoAKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "Host to Device transfer time: " << timerManager.Host2DeviceDataTransfer.TotalElapsedMiliseconds() << " ms." << std::endl;
-			std::cout << std::setw(40) << std::left << "Device to Host transfer time: " << timerManager.Device2HostDataTransfer.TotalElapsedMiliseconds() << " ms." << std::endl;
-
+			std::cout << std::setw(40) << std::left << "Computing new centroids time: "
+				<< timerManager.ComputeNewCentroidsTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Updating centroids time: "
+				<< timerManager.UpdateCentroidsTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
 		}
 
-		std::cout << std::setw(40) << std::left << "Performing clustering time: " << timerManager.PerformClusteringTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
-		std::cout << std::setw(40) << std::left << "Saving data to output file time: " << timerManager.SaveDataToOutputFileTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
-		std::cout << std::setw(40) << std::left << "Loading data from input file time: " << timerManager.LoadDataFromInputFileTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+		else {
+			std::cout << std::setw(40) << std::left << "Host to Device transfer time: "
+				<< timerManager.Host2DeviceDataTransfer.TotalElapsedMiliseconds() << " ms." << std::endl;
+			if (Parameters.ComputationMethod == "gpu1") {
+				std::cout << std::setw(40) << std::left << "AoS to SoA conversion time: "
+					<< timerManager.AoS2SoAKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+			}
+
+			std::cout << std::setw(40) << std::left << "Computing new centroids time: "
+				<< timerManager.ComputeNewCentroidsKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+			std::cout << std::setw(40) << std::left << "Updating centroids time: "
+				<< timerManager.UpdateCentroidsKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+
+			if (Parameters.ComputationMethod == "gpu1") {
+				std::cout << std::setw(40) << std::left << "SoA to AoS conversion time: "
+					<< timerManager.SoA2AoSKernelTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+			}
+
+			std::cout << std::setw(40) << std::left << "Device to Host transfer time: "
+				<< timerManager.Device2HostDataTransfer.TotalElapsedMiliseconds() << " ms." << std::endl;
+		}
+
+		std::cout << std::endl;
+		std::cout << std::setw(40) << std::left << "Total clustering time: "
+			<< timerManager.PerformClusteringTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+		std::cout << std::setw(40) << std::left << "Saving data to output file time: " 
+			<< timerManager.SaveDataToOutputFileTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
+		std::cout << std::setw(40) << std::left << "Loading data from input file time: " 
+			<< timerManager.LoadDataFromInputFileTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
 	}
 
 	void LoadDataFromInputFile(FILE* inputFile) override {
 		std::cout << "Loading data from input file..." << std::endl;
 
-		auto& timerManager = Timers::HostTimerManager::GetInstance();
+		auto& timerManager = Timers::TimerManager::GetInstance();
 		timerManager.LoadDataFromInputFileTimer.Start();
 
 		if (Parameters.DataFormat == "txt") {
@@ -123,7 +147,7 @@ public:
 	}
 
 	void SaveDataToOutputFile(thrust::host_vector<size_t>& membership) override {
-		auto& timerManager = Timers::HostTimerManager::GetInstance();
+		auto& timerManager = Timers::TimerManager::GetInstance();
 		timerManager.SaveDataToOutputFileTimer.Start();
 
 		SaveDataToTextFile(membership);
