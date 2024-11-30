@@ -84,7 +84,6 @@ namespace GPU1 {
 			size_t iteration = 0, maxIterations = 100;
 
 			std::cout << std::endl << "Starting clustering..." << std::endl;
-			std::cout << "Number of points: " << hostPoints.size() << ", Number of centroids: " << hostCentroids.size() << std::endl;
 
 			while (iteration++ < maxIterations && changes != 0) {
 				std::cout << "\n=== Iteration: " << iteration << " ===" << std::endl;
