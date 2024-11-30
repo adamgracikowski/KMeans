@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Timer.cuh"
-#include "CudaCheck.cuh"
+#include "../CudaCheck.cuh"
 
 #include <driver_types.h>
 #include <cuda_runtime_api.h>

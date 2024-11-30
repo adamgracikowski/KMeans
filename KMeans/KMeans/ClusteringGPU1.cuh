@@ -2,7 +2,7 @@
 
 #include "DeviceDataGPU1.cuh"
 #include "CommonDeviceTools.cuh"
-#include "TimerManager.cuh"
+#include "Timers/TimerManager.cuh"
 
 #include <iomanip>
 

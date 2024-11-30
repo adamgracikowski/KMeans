@@ -1,10 +1,10 @@
 #pragma once
 
-#include "ClusteringCPU.cuh"
-#include "ClusteringGPU1.cuh"
-#include "ClusteringGPU2.cuh"
+#include "../CPU/ClusteringCPU.cuh"
+#include "../ClusteringGPU1.cuh"
+#include "../GPU2/ClusteringGPU2.cuh"
 #include "ProgramParameters.cuh"
-#include "TimerManager.cuh"
+#include "../Timers/TimerManager.cuh"
 
 #include <cstdio>
 #include <stdexcept>

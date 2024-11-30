@@ -1,7 +1,7 @@
 #pragma once
 
-#include "TimerManager.cuh"
-#include "Point.cuh"
+#include "../Timers/TimerManager.cuh"
+#include "../Point.cuh"
 
 #include <iomanip>
 
@@ -39,15 +39,18 @@ namespace CPU
 				ComputeNewCentroids(points, centroids, updatedCentroids, updatedCounts, membership, changes);
 				timerManager.ComputeNewCentroidsTimer.Stop();
 
-				std::cout << std::setw(35) << std::left << "    Elapsed time: " <<  timerManager.ComputeNewCentroidsTimer.ElapsedMiliseconds() << " ms" << std::endl;
-				std::cout << std::setw(35) << std::left << "    Changes in membership: " << changes << std::endl;
+				std::cout << std::setw(35) << std::left << "    Elapsed time: " 
+					<<  timerManager.ComputeNewCentroidsTimer.ElapsedMiliseconds() << " ms" << std::endl;
+				std::cout << std::setw(35) << std::left << "    Changes in membership: " 
+					<< changes << std::endl;
 				std::cout << " -> Updating centroids..." << std::endl;
 
 				timerManager.UpdateCentroidsTimer.Start();
 				UpdateCentroids(centroids, updatedCentroids, updatedCounts);
 				timerManager.UpdateCentroidsTimer.Stop();
 
-				std::cout << std::setw(35) << std::left << "    Elapsed time: " << timerManager.UpdateCentroidsTimer.ElapsedMiliseconds() << " ms" << std::endl;
+				std::cout << std::setw(35) << std::left << "    Elapsed time: " 
+					<< timerManager.UpdateCentroidsTimer.ElapsedMiliseconds() << " ms" << std::endl;
 			}
 
 			if (changes == 0) {

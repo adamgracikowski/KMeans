@@ -2,8 +2,8 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-#include "ParseProgramParameters.cuh"
-#include "CreateManagerInstance.cuh"
+#include "ProgramManagers/ParseProgramParameters.cuh"
+#include "ProgramManagers/CreateManagerInstance.cuh"
 
 #include <iostream>
 #include <cstdio>

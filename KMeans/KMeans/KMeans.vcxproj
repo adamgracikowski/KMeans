@@ -80,24 +80,24 @@
     <CudaCompile Include="kernel.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClusteringCPU.cuh" />
+    <ClInclude Include="CPU\ClusteringCPU.cuh" />
     <ClInclude Include="ClusteringGPU1.cuh" />
-    <ClInclude Include="ClusteringGPU2.cuh" />
+    <ClInclude Include="GPU2\ClusteringGPU2.cuh" />
     <ClInclude Include="CommonDeviceTools.cuh" />
-    <ClInclude Include="CreateManagerInstance.cuh" />
+    <ClInclude Include="ProgramManagers\CreateManagerInstance.cuh" />
     <ClInclude Include="CudaCheck.cuh" />
     <ClInclude Include="DeviceDataGPU1.cuh" />
     <ClInclude Include="DevicePointsCollection.cuh" />
     <ClInclude Include="DeviceRawDataGPU.cuh" />
     <ClInclude Include="DeviceRawDataGPU1.cuh" />
-    <ClInclude Include="DeviceTimer.cuh" />
-    <ClInclude Include="HostTimer.cuh" />
-    <ClInclude Include="TimerManager.cuh" />
-    <ClInclude Include="ParseProgramParameters.cuh" />
+    <ClInclude Include="Timers\DeviceTimer.cuh" />
+    <ClInclude Include="Timers\HostTimer.cuh" />
+    <ClInclude Include="Timers\TimerManager.cuh" />
+    <ClInclude Include="ProgramManagers\ParseProgramParameters.cuh" />
     <ClInclude Include="Point.cuh" />
-    <ClInclude Include="ProgramManager.cuh" />
-    <ClInclude Include="ProgramParameters.cuh" />
-    <ClInclude Include="Timer.cuh" />
+    <ClInclude Include="ProgramManagers\ProgramManager.cuh" />
+    <ClInclude Include="ProgramManagers\ProgramParameters.cuh" />
+    <ClInclude Include="Timers\Timer.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

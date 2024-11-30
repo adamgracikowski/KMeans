@@ -24,13 +24,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Timer.cuh">
+    <ClInclude Include="Timers\Timer.cuh">
       <Filter>Timers</Filter>
     </ClInclude>
-    <ClInclude Include="HostTimer.cuh">
+    <ClInclude Include="Timers\HostTimer.cuh">
       <Filter>Timers</Filter>
     </ClInclude>
-    <ClInclude Include="DeviceTimer.cuh">
+    <ClInclude Include="Timers\DeviceTimer.cuh">
       <Filter>Timers</Filter>
     </ClInclude>
     <ClInclude Include="Point.cuh" />
@@ -52,26 +52,26 @@
     <ClInclude Include="CommonDeviceTools.cuh">
       <Filter>CommonGPU</Filter>
     </ClInclude>
-    <ClInclude Include="ClusteringCPU.cuh">
+    <ClInclude Include="CPU\ClusteringCPU.cuh">
       <Filter>CPU</Filter>
     </ClInclude>
-    <ClInclude Include="ProgramParameters.cuh">
+    <ClInclude Include="ProgramManagers\ProgramParameters.cuh">
       <Filter>ProgramManagers</Filter>
     </ClInclude>
-    <ClInclude Include="ParseProgramParameters.cuh">
+    <ClInclude Include="ProgramManagers\ParseProgramParameters.cuh">
       <Filter>ProgramManagers</Filter>
     </ClInclude>
-    <ClInclude Include="ProgramManager.cuh">
+    <ClInclude Include="ProgramManagers\ProgramManager.cuh">
       <Filter>ProgramManagers</Filter>
     </ClInclude>
-    <ClInclude Include="CreateManagerInstance.cuh">
+    <ClInclude Include="ProgramManagers\CreateManagerInstance.cuh">
       <Filter>ProgramManagers</Filter>
     </ClInclude>
-    <ClInclude Include="ClusteringGPU2.cuh">
+    <ClInclude Include="GPU2\ClusteringGPU2.cuh">
       <Filter>GPU2</Filter>
     </ClInclude>
     <ClInclude Include="CudaCheck.cuh" />
-    <ClInclude Include="TimerManager.cuh">
+    <ClInclude Include="Timers\TimerManager.cuh">
       <Filter>Timers</Filter>
     </ClInclude>
   </ItemGroup>

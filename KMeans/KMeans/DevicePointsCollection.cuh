@@ -2,7 +2,7 @@
 
 #include "CommonDeviceTools.cuh"
 #include "CudaCheck.cuh"
-#include "TimerManager.cuh"
+#include "Timers/TimerManager.cuh"
 
 using namespace DataStructures;
 
