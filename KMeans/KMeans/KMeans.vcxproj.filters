@@ -74,5 +74,6 @@
     <ClInclude Include="Timers\TimerManager.cuh">
       <Filter>Timers</Filter>
     </ClInclude>
+    <ClInclude Include="Visualization\Visualization.cuh" />
   </ItemGroup>
 </Project>

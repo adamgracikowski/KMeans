@@ -105,6 +105,7 @@ opengl32.lib;cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;co
     <ClInclude Include="ProgramManagers\ProgramManager.cuh" />
     <ClInclude Include="ProgramManagers\ProgramParameters.cuh" />
     <ClInclude Include="Timers\Timer.cuh" />
+    <ClInclude Include="Visualization\Visualization.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
