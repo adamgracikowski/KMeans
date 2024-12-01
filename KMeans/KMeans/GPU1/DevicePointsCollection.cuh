@@ -1,13 +1,53 @@
 #pragma once
 
-#include "CommonDeviceTools.cuh"
-#include "CudaCheck.cuh"
-#include "Timers/TimerManager.cuh"
+#include "../Point.cuh"
+#include "../CudaCheck.cuh"
+#include "../Timers/TimerManager.cuh"
+
+#include <cfloat>
+
+#define FLOAT_INFINITY FLT_MAX
 
 using namespace DataStructures;
 
-namespace CommonGPU 
+namespace GPU1 
 {
+	template<size_t dim>
+	__global__
+		void AoS2SoAKernel(float* deviceAoS, float* deviceSoA, size_t length)
+	{
+		// [x1, y1, z1, x2, y2, z2] -> [x1, x2, y1, y2, z1, z2]
+
+		size_t tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+		if (tid >= length) return;
+
+		for (size_t i = 0; i < dim; ++i) {
+			deviceSoA[tid + i * length] = deviceAoS[tid * dim + i];
+		}
+	}
+
+	template<size_t dim>
+	__global__
+		void SoA2AoSKernel(float* deviceSoA, float* deviceAoS, size_t length)
+	{
+		// [x1, x2, y1, y2, z1, z2] -> [x1, y1, z1, x2, y2, z2] 
+
+		size_t tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+		if (tid >= length) return;
+
+		for (size_t i = 0; i < dim; ++i) {
+			deviceAoS[tid * dim + i] = deviceSoA[tid + i * length];
+		}
+	}
+
+	__device__
+		float& GetCoordinate(float* devicePoints, size_t size, size_t pointIndex, size_t dimensionIdx)
+	{
+		return devicePoints[pointIndex + dimensionIdx * size];
+	}
+
 	template<size_t dim>
 	class DevicePointsCollection {
 	private:
@@ -104,9 +144,4 @@ namespace CommonGPU
 			CUDACHECK(cudaFree(deviceAoS));
 		}
 	};
-
-	__device__
-	float& GetCoordinate(float* devicePoints, size_t size, size_t pointIndex, size_t dimensionIdx) {
-		return devicePoints[pointIndex + dimensionIdx * size];
-	}
 }

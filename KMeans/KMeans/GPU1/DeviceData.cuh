@@ -1,13 +1,12 @@
 #pragma once
 
-#include "DeviceRawDataGPU1.cuh"
-
-using namespace CommonGPU;
+#include "DeviceRawData.cuh"
+#include "DevicePointsCollection.cuh"
 
 namespace GPU1
 {
 	template<size_t dim>
-	struct DeviceDataGPU1 {
+	struct DeviceData {
 		DevicePointsCollection<dim> DevicePoints;
 		DevicePointsCollection<dim> DeviceCentroids;
 		DevicePointsCollection<dim> DeviceUpdatedCentroids;
@@ -16,7 +15,7 @@ namespace GPU1
 		thrust::device_vector<size_t> DeviceChanges;
 		thrust::device_vector<size_t> DevicePointsPermutation;
 
-		DeviceDataGPU1(thrust::host_vector<Point<dim>>& hostCentroids, thrust::host_vector<Point<dim>>& hostPoints) :
+		DeviceData(thrust::host_vector<Point<dim>>& hostCentroids, thrust::host_vector<Point<dim>>& hostPoints) :
 			DevicePoints(hostPoints),
 			DeviceCentroids(hostCentroids),
 			DeviceUpdatedCentroids(hostCentroids.size()),
@@ -28,8 +27,8 @@ namespace GPU1
 			thrust::copy_n(thrust::make_counting_iterator(0), DevicePoints.GetSize(), DevicePointsPermutation.begin());
 		}
 
-		DeviceRawDataGPU1<dim> ToDeviceRawData() {
-			DeviceRawDataGPU1<dim> result{};
+		DeviceRawData<dim> ToDeviceRawData() {
+			DeviceRawData<dim> result{};
 
 			result.PointsCount = DevicePoints.GetSize();
 			result.DevicePoints = DevicePoints.RawAccess();

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../CPU/ClusteringCPU.cuh"
-#include "../ClusteringGPU1.cuh"
+#include "../GPU1/ClusteringGPU1.cuh"
 #include "../GPU2/ClusteringGPU2.cuh"
 #include "ProgramParameters.cuh"
 #include "../Timers/TimerManager.cuh"

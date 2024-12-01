@@ -1,9 +1,9 @@
 #pragma once
 
-namespace CommonGPU
+namespace GPU1
 {
 	template<size_t dim>
-	struct DeviceRawDataGPU {
+	struct DeviceRawData {
 		size_t PointsCount{};
 		float* DevicePoints{};
 		size_t CentroidsCount{};
@@ -11,5 +11,7 @@ namespace CommonGPU
 		size_t* DeviceMembership{};
 		size_t* DeviceChanges{};
 		size_t* DevicePointsPermutation{};
+		float* DeviceUpdatedCentroids{};
+		unsigned* DeviceUpdatedCentroidsCounts{};
 	};
 }
