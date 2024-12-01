@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../CommonDeviceTools.cuh"
+#include "../Point.cuh"
 
 #include <thrust/sequence.h>
 #include "thrust/iterator/permutation_iterator.h"

@@ -81,15 +81,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPU\ClusteringCPU.cuh" />
-    <ClInclude Include="ClusteringGPU1.cuh" />
+    <ClInclude Include="GPU1\ClusteringGPU1.cuh" />
     <ClInclude Include="GPU2\ClusteringGPU2.cuh" />
-    <ClInclude Include="CommonDeviceTools.cuh" />
     <ClInclude Include="ProgramManagers\CreateManagerInstance.cuh" />
     <ClInclude Include="CudaCheck.cuh" />
-    <ClInclude Include="DeviceDataGPU1.cuh" />
-    <ClInclude Include="DevicePointsCollection.cuh" />
-    <ClInclude Include="DeviceRawDataGPU.cuh" />
-    <ClInclude Include="DeviceRawDataGPU1.cuh" />
+    <ClInclude Include="GPU1\DeviceData.cuh" />
+    <ClInclude Include="GPU1\DevicePointsCollection.cuh" />
+    <ClInclude Include="GPU1\DeviceRawData.cuh" />
     <ClInclude Include="Timers\DeviceTimer.cuh" />
     <ClInclude Include="Timers\HostTimer.cuh" />
     <ClInclude Include="Timers\TimerManager.cuh" />
