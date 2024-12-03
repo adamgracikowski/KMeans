@@ -16,14 +16,14 @@ namespace DataStructures
 		float Coordinates[dim];
 
 		HOST_DEVICE
-			Point() {
+		Point() {
 			for (int i = 0; i < dim; i++) {
 				Coordinates[i] = 0.0;
 			}
 		}
 
 		HOST_DEVICE
-			static float SquareDistance(const Point<dim>& p, const Point<dim>& q) {
+		static float SquareDistance(const Point<dim>& p, const Point<dim>& q) {
 			float distance = 0.0;
 			for (int i = 0; i < dim; i++) {
 				float difference = p.Coordinates[i] - q.Coordinates[i];
@@ -34,7 +34,7 @@ namespace DataStructures
 		}
 
 		HOST_DEVICE
-			Point<dim>& operator+=(const Point<dim>& other) {
+		Point<dim>& operator+=(const Point<dim>& other) {
 			for (int i = 0; i < dim; i++) {
 				this->Coordinates[i] += other.Coordinates[i];
 			}
@@ -43,7 +43,7 @@ namespace DataStructures
 		}
 
 		HOST_DEVICE
-			Point<dim> operator+(const Point<dim>& other) const {
+		Point<dim> operator+(const Point<dim>& other) const {
 			Point<dim> result;
 			for (size_t i = 0; i < dim; ++i) {
 				result.Coordinates[i] = this->Coordinates[i] + other.Coordinates[i];

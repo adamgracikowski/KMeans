@@ -4,6 +4,8 @@
 
 #include <memory>
 
+// Macro to generate a case statement for handling a specific dimension M
+// It creates an instance of ProgramManager<M> with parameters, loads data, and then returns it
 #define GENERATE_CASE(M)														  \
     case M: {																	  \
         auto instance = std::make_unique<ProgramManager<M>>(N, d, k, parameters); \
@@ -11,10 +13,12 @@
         return instance;														  \
     }
 
+// Factory function to create an instance of IProgramManager based on input parameters
 std::unique_ptr<IProgramManager> CreateManagerInstance(ProgramParameters parameters) {
 	FILE* inputFile{};
 	int N, d, k;
 
+	// Handle input file in text format
 	if (parameters.DataFormat == "txt") {
 		if (fopen_s(&inputFile, parameters.InputFile.c_str(), "r") != 0) {
 			throw std::runtime_error("Could not open " + parameters.InputFile);
@@ -25,6 +29,7 @@ std::unique_ptr<IProgramManager> CreateManagerInstance(ProgramParameters paramet
 			throw std::runtime_error("Error while reading the header of " + parameters.InputFile);
 		}
 	}
+	// Handle input file in binary format
 	else if (parameters.DataFormat == "bin") {
 		if (fopen_s(&inputFile, parameters.InputFile.c_str(), "rb") != 0) {
 			throw std::runtime_error("Could not open " + parameters.InputFile);
@@ -37,6 +42,7 @@ std::unique_ptr<IProgramManager> CreateManagerInstance(ProgramParameters paramet
 			throw std::runtime_error("Error while reading the header of " + parameters.InputFile);
 		}
 	}
+	// Throw an error for unsupported data formats
 	else {
 		throw std::runtime_error("Invalid format " + parameters.DataFormat);
 	}

@@ -10,8 +10,8 @@ namespace Timers
 {
 	class DeviceTimer : public Timer {
 	private:
-		cudaEvent_t StartEvent{ nullptr };
-		cudaEvent_t StopEvent{ nullptr };
+		cudaEvent_t StartEvent{ nullptr }; // CUDA event used to mark the start of a timing interval
+		cudaEvent_t StopEvent{ nullptr };  // CUDA event used to mark the end of a timing interval
 		float MilisecondsElapsed{};
 		float TotalMilisecondsElapsed{};
 
@@ -21,6 +21,7 @@ namespace Timers
 		}
 
 		void Start() override {
+			// Ensure old events are destroyed before creating new ones
 			DestroyCudaEvents();
 			InitCudaEvents();
 			CUDACHECK(cudaEventRecord(StartEvent));
@@ -31,7 +32,7 @@ namespace Timers
 				return;
 
 			CUDACHECK(cudaEventRecord(StopEvent));
-			CUDACHECK(cudaEventSynchronize(StopEvent));
+			CUDACHECK(cudaEventSynchronize(StopEvent)); // Wait until the stop event is complete
 			CUDACHECK(cudaEventElapsedTime(&MilisecondsElapsed, StartEvent, StopEvent));
 
 			TotalMilisecondsElapsed += MilisecondsElapsed;

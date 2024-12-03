@@ -13,12 +13,14 @@ namespace CPU
 	template<size_t dim>
 	class ClusteringCPU {
 	public:
+		// Main clustering function. Performs k-means clustering on CPU
 		thrust::host_vector<size_t> PerformClustering(
 			thrust::host_vector<Point<dim>>& centroids,
 			thrust::host_vector<Point<dim>>& points)
 		{
 			auto& timerManager = Timers::TimerManager::GetInstance();
 
+			// Buffers for intermediate results
 			thrust::host_vector<Point<dim>> updatedCentroids(centroids.size());
 			thrust::host_vector<size_t> updatedCounts(centroids.size());
 			thrust::host_vector<size_t> membership(points.size());
@@ -28,6 +30,7 @@ namespace CPU
 
 			std::cout << std::endl << "Starting clustering..." << std::endl;
 
+			// Main clustering loop
 			while (iteration++ < maxIterations && changes != 0) {
 				std::cout << "\n=== Iteration: " << iteration << " ===" << std::endl;
 
@@ -35,6 +38,7 @@ namespace CPU
 
 				std::cout << " -> Computing new centroids..." << std::endl;
 
+				// Assign points to the nearest centroids and count changes
 				timerManager.ComputeNewCentroidsTimer.Start();
 				ComputeNewCentroids(points, centroids, updatedCentroids, updatedCounts, membership, changes);
 				timerManager.ComputeNewCentroidsTimer.Stop();
@@ -45,6 +49,7 @@ namespace CPU
 					<< changes << std::endl;
 				std::cout << " -> Updating centroids..." << std::endl;
 
+				// Update centroids based on assigned points
 				timerManager.UpdateCentroidsTimer.Start();
 				UpdateCentroids(centroids, updatedCentroids, updatedCounts);
 				timerManager.UpdateCentroidsTimer.Stop();

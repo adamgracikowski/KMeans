@@ -6,6 +6,7 @@
 
 #define CUDACHECK(err) do { cuda_check((err), __FILE__, __LINE__); } while(false)
 
+// https://stackoverflow.com/questions/14038589/what-is-the-canonical-way-to-check-for-errors-using-the-cuda-runtime-api
 inline void cuda_check(cudaError_t error_code, const char* file, int line)
 {
 	if (error_code != cudaSuccess)
