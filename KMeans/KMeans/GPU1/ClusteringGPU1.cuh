@@ -6,6 +6,7 @@
 #include <iomanip>
 
 namespace GPU1 {
+	// Copies centroids from global memory into shared memory for faster access
 	template<size_t dim>
 	__device__
 	void CopyCentroidsToSharedMemory(DeviceRawData<dim>& deviceRawData, float* sharedMemory)
@@ -15,19 +16,21 @@ namespace GPU1 {
 			);
 
 		for (size_t i = 0; i < dim; ++i) {
-			size_t offset = i * deviceRawData.CentroidsCount;
+			size_t offset = i * deviceRawData.CentroidsCount; // Offset for current dimension
 			for (size_t j = 0; j < blockCount; ++j) {
-				size_t centroidIndex = THREADS_IN_ONE_BLOCK * j + threadIdx.x;
+				size_t centroidIndex = THREADS_IN_ONE_BLOCK * j + threadIdx.x; // Calculate thread-specific index
 				if (centroidIndex >= deviceRawData.CentroidsCount) break;
 				size_t index = centroidIndex + offset;
-				sharedMemory[index] = deviceRawData.DeviceCentroids[index];
+				sharedMemory[index] = deviceRawData.DeviceCentroids[index]; // Copy centroid coordinate to shared memory
 			}
 		}
 
+		// Ensure all threads in the warp complete copying before proceeding
 		__syncwarp();
 		__syncthreads();
 	}
 
+	// Computes the squared Euclidean distance between a point and a centroid
 	template<size_t dim>
 	__device__
 	float SquaredCentroidDistance(
@@ -54,6 +57,7 @@ namespace GPU1 {
 		return distance;
 	}
 
+	// Finds the nearest centroid for a given point
 	template<size_t dim>
 	__device__
 	size_t FindNearestCentroid(DeviceRawData<dim>& deviceRawData, size_t pointIndex, float* sharedMemory)
@@ -84,10 +88,12 @@ namespace GPU1 {
 		return nearest;
 	}
 
+	// Updates the coordinates of centroids based on new assignments
 	template<size_t dim>
 	__device__
 	void ComputeNewCentroids(DeviceRawData<dim> deviceRawData, size_t pointIndex, size_t centroidIndex) 
 	{
+		// Accumulate point coordinates into the corresponding centroid using atomic operations
 		for (size_t i = 0; i < dim; i++) {
 			float* centroidCoordinate = &GetCoordinate(
 				deviceRawData.DeviceUpdatedCentroids, deviceRawData.CentroidsCount, centroidIndex, i
@@ -97,22 +103,27 @@ namespace GPU1 {
 				deviceRawData.DevicePoints, deviceRawData.PointsCount, pointIndex, i
 			);
 
+			// Atomically add point coordinate to centroid
 			atomicAdd(centroidCoordinate, pointCoordinate);
 		}
 
+		// Atomically increment the count of points assigned to this centroid
 		atomicAdd(&deviceRawData.DeviceUpdatedCentroidsCounts[centroidIndex], 1);
 	}
 
+	// Updates the membership of points to the nearest centroid
 	template<size_t dim>
 	__device__
 	inline void UpdateChanges(DeviceRawData<dim>& deviceRawData, size_t pointIndex, size_t centroidIndex)
 	{
+		// Check if the membership has changed
 		if (deviceRawData.DeviceMembership[pointIndex] == centroidIndex) return;
 
 		deviceRawData.DeviceMembership[pointIndex] = centroidIndex;
 		deviceRawData.DeviceChanges[pointIndex] = 1;
 	}
 
+	// Kernel for finding the nearest centroids for all points in parallel
 	template<size_t dim>
 	__global__
 	void FindNearestCentroidsKernel(DeviceRawData<dim> deviceRawData)
@@ -125,10 +136,12 @@ namespace GPU1 {
 
 		size_t nearest = FindNearestCentroid<dim>(deviceRawData, tid, sharedMemory);
 
+		// Update membership and compute new centroids
 		UpdateChanges(deviceRawData, tid, nearest);
 		ComputeNewCentroids<dim>(deviceRawData, tid, nearest);
 	}
 
+	// Kernel for updating centroids after all points are assigned
 	template<size_t dim>
 	__global__
 	void UpdateCentroidsKernel(DeviceRawData<dim> deviceRawData) {
@@ -140,6 +153,7 @@ namespace GPU1 {
 			? (size_t)1
 			: deviceRawData.DeviceUpdatedCentroidsCounts[tid];
 
+		// Update centroid coordinates by averaging
 		for (size_t i = 0; i < dim; i++) {
 			float* coordinate = &GetCoordinate(
 				deviceRawData.DeviceCentroids,
@@ -153,16 +167,17 @@ namespace GPU1 {
 				tid, i
 			);
 
-			*coordinate = *updatedCoordinate / count;
-			*updatedCoordinate = 0;
+			*coordinate = *updatedCoordinate / count; // Update coordinate
+			*updatedCoordinate = 0;					  // Reset updated coordinate
 		}
 
-		deviceRawData.DeviceUpdatedCentroidsCounts[tid] = 0;
+		deviceRawData.DeviceUpdatedCentroidsCounts[tid] = 0; // Reset count for this centroid
 	}
 
 	template<size_t dim>
 	class ClusteringGPU1 {
 	public:
+		// Main clustering function. Performs k-means clustering on GPU using self-made kernel functions
 		template<size_t dim>
 		thrust::host_vector<size_t> PerformClustering(
 			thrust::host_vector<Point<dim>>& hostCentroids, 
@@ -173,6 +188,8 @@ namespace GPU1 {
 			size_t k = hostCentroids.size();
 			size_t N = hostPoints.size();
 			
+			// Transfer data from host to device
+			// Create buffers for intermediate results
 			DeviceData<dim> deviceData(hostCentroids, hostPoints);
 
 			size_t changes = N;
@@ -180,6 +197,7 @@ namespace GPU1 {
 
 			std::cout << std::endl << "Starting clustering..." << std::endl;
 
+			// Main clustering loop
 			while (iteration++ < maxIterations && changes != 0) {
 				std::cout << "\n=== Iteration: " << iteration << " ===" << std::endl;
 
@@ -189,6 +207,8 @@ namespace GPU1 {
 
 				timerManager.ComputeNewCentroidsKernelTimer.Start();
 
+				// Assign points to the nearest centroids
+				// Count changes in membership
 				changes = FindNearestCentroids(deviceData);
 
 				timerManager.ComputeNewCentroidsKernelTimer.Stop();
@@ -201,6 +221,7 @@ namespace GPU1 {
 
 				timerManager.UpdateCentroidsKernelTimer.Start();
 
+				// Update centroids based on assigned points
 				UpdateCentroids(deviceData);
 
 				timerManager.UpdateCentroidsKernelTimer.Stop();
@@ -216,6 +237,7 @@ namespace GPU1 {
 				std::cout << "\nClustering completed: Maximum number of iterations reached." << std::endl;
 			}
 
+			// Transfer data from device back to host
 			hostCentroids = deviceData.GetHostCentroids();
 			hostPoints = deviceData.DevicePoints.ToHost();
 			return deviceData.GetHostMembership();

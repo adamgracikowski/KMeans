@@ -12,12 +12,12 @@ using namespace DataStructures;
 
 namespace GPU1 
 {
+	// Kernel to convert data from Array of Structures (AoS) to Structure of Arrays (SoA)
+	// Converts data layout: [x1, y1, z1, x2, y2, z2] -> [x1, x2, y1, y2, z1, z2]
 	template<size_t dim>
 	__global__
-		void AoS2SoAKernel(float* deviceAoS, float* deviceSoA, size_t length)
+	void AoS2SoAKernel(float* deviceAoS, float* deviceSoA, size_t length)
 	{
-		// [x1, y1, z1, x2, y2, z2] -> [x1, x2, y1, y2, z1, z2]
-
 		size_t tid = threadIdx.x + blockIdx.x * blockDim.x;
 
 		if (tid >= length) return;
@@ -27,9 +27,11 @@ namespace GPU1
 		}
 	}
 
+	// Kernel to convert data from Structure of Arrays (SoA) to Array of Structures (AoS).
+	// Converts data layout: [x1, x2, y1, y2, z1, z2] -> [x1, y1, z1, x2, y2, z2]
 	template<size_t dim>
 	__global__
-		void SoA2AoSKernel(float* deviceSoA, float* deviceAoS, size_t length)
+	void SoA2AoSKernel(float* deviceSoA, float* deviceAoS, size_t length)
 	{
 		// [x1, x2, y1, y2, z1, z2] -> [x1, y1, z1, x2, y2, z2] 
 
@@ -42,18 +44,20 @@ namespace GPU1
 		}
 	}
 
+	// Helper function to access a specific coordinate of a point stored in SoA format
 	__device__
-		float& GetCoordinate(float* devicePoints, size_t size, size_t pointIndex, size_t dimensionIdx)
+	float& GetCoordinate(float* devicePoints, size_t size, size_t pointIndex, size_t dimensionIdx)
 	{
 		return devicePoints[pointIndex + dimensionIdx * size];
 	}
 
+	// Class to manage points stored on the GPU in a Structure of Arrays (SoA) format
 	template<size_t dim>
 	class DevicePointsCollection {
 	private:
 	public:
 		size_t Size{};
-		float* DevicePoints{};
+		float* DevicePoints{}; // Pointer to the GPU memory for points in SoA format
 
 	public:
 		DevicePointsCollection(size_t size)
@@ -84,10 +88,11 @@ namespace GPU1
 			return DevicePoints;
 		}
 
+		// Copies points from the device (SoA format) back to the host (AoS format)
 		thrust::host_vector<Point<dim>> ToHost() {
 			auto& timerManager = Timers::TimerManager::GetInstance();
 			
-			float* deviceAoS{};
+			float* deviceAoS{}; // Temporary memory for AoS format on the device
 
 			CUDACHECK(cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size));
 
@@ -95,6 +100,7 @@ namespace GPU1
 
 			timerManager.SoA2AoSKernelTimer.Start();
 
+			// Launch the SoA to AoS conversion kernel
 			SoA2AoSKernel<dim> << < blockCount, THREADS_IN_ONE_BLOCK >> > (DevicePoints, deviceAoS, Size);
 			CUDACHECK(cudaPeekAtLastError());
 			CUDACHECK(cudaDeviceSynchronize());
@@ -115,18 +121,20 @@ namespace GPU1
 		}
 
 	private:
+		// Transfers points from the host (AoS format) to the device (SoA format)
 		void FromHost(thrust::host_vector<Point<dim>>& points) {
 			auto& timerManager = Timers::TimerManager::GetInstance();
 
 			Size = points.size();
 
-			float* deviceAoS{};
+			float* deviceAoS{}; // Temporary memory for AoS format on the device
 
 			CUDACHECK(cudaMalloc(&DevicePoints, sizeof(Point<dim>) * Size));
 			CUDACHECK(cudaMalloc(&deviceAoS, sizeof(Point<dim>) * Size));
 
 			timerManager.Host2DeviceDataTransfer.Start();
 
+			// Copy points from the host to the AoS memory on the device
 			CUDACHECK(cudaMemcpy(deviceAoS, points.data(), sizeof(Point<dim>) * Size, cudaMemcpyHostToDevice));
 
 			timerManager.Host2DeviceDataTransfer.Stop();
@@ -135,6 +143,7 @@ namespace GPU1
 
 			timerManager.AoS2SoAKernelTimer.Start();
 
+			// Launch the AoS to SoA conversion kernel
 			AoS2SoAKernel<dim> << <blockCount, THREADS_IN_ONE_BLOCK >> > (deviceAoS, DevicePoints, Size);
 			CUDACHECK(cudaPeekAtLastError());
 			CUDACHECK(cudaDeviceSynchronize());
