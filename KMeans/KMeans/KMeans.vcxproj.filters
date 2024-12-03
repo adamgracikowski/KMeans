@@ -34,24 +34,6 @@
       <Filter>Timers</Filter>
     </ClInclude>
     <ClInclude Include="Point.cuh" />
-    <ClInclude Include="ClusteringGPU1.cuh">
-      <Filter>GPU1</Filter>
-    </ClInclude>
-    <ClInclude Include="DeviceRawDataGPU1.cuh">
-      <Filter>GPU1</Filter>
-    </ClInclude>
-    <ClInclude Include="DeviceDataGPU1.cuh">
-      <Filter>GPU1</Filter>
-    </ClInclude>
-    <ClInclude Include="DevicePointsCollection.cuh">
-      <Filter>CommonGPU</Filter>
-    </ClInclude>
-    <ClInclude Include="DeviceRawDataGPU.cuh">
-      <Filter>CommonGPU</Filter>
-    </ClInclude>
-    <ClInclude Include="CommonDeviceTools.cuh">
-      <Filter>CommonGPU</Filter>
-    </ClInclude>
     <ClInclude Include="CPU\ClusteringCPU.cuh">
       <Filter>CPU</Filter>
     </ClInclude>
@@ -75,5 +57,9 @@
       <Filter>Timers</Filter>
     </ClInclude>
     <ClInclude Include="Visualization\Visualization.cuh" />
+    <ClInclude Include="GPU1\ClusteringGPU1.cuh" />
+    <ClInclude Include="GPU1\DeviceData.cuh" />
+    <ClInclude Include="GPU1\DevicePointsCollection.cuh" />
+    <ClInclude Include="GPU1\DeviceRawData.cuh" />
   </ItemGroup>
 </Project>
