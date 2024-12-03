@@ -19,6 +19,7 @@
 
 namespace GPU2
 {
+	// Functor to assign points to the nearest centroids
 	template<size_t dim>
 	struct AssignPointsToCentroids {
 		const Point<dim>* devicePoints;
@@ -32,7 +33,9 @@ namespace GPU2
 			deviceCentroids(thrust::raw_pointer_cast(deviceCentroids.data())),
 			k(deviceCentroids.size()) {	}
 
-		__device__ size_t operator()(size_t pointIndex) const 
+		// Functor operator to compute the index of the nearest centroid for a given point
+		__device__ 
+		size_t operator()(size_t pointIndex) const 
 		{
 			const Point<dim>& point = devicePoints[pointIndex];
 			float nearestDistance = FLOAT_INFINITY;
@@ -50,6 +53,7 @@ namespace GPU2
 		}
 	};
 
+	// Functor to sum two points coordinate-wise
 	template<size_t dim>
 	struct SumPoints {
 		__device__ Point<dim> operator()(Point<dim>& firstPoint, Point<dim>& secondPoint) const 
@@ -64,12 +68,14 @@ namespace GPU2
 		}
 	};
 
+	// Functor to compute the centroid from a summed point and a count
 	template<size_t dim>
 	struct ComputeCentroid {
 		__device__ Point<dim> operator()(Point<dim>& summedPoint, size_t count) const 
 		{
 			Point<dim> result;
 
+			// Avoid division by zero
 			count = count == 0 ? 1 : count;
 
 			for (int i = 0; i < dim; ++i) {
@@ -80,6 +86,7 @@ namespace GPU2
 		}
 	};
 
+	// Functor to check if two memberships are not equal (used to count changes)
 	struct CheckIfNotEqual {
 		__device__
 			bool operator()(const thrust::tuple<size_t, size_t>& t) const 
@@ -91,7 +98,7 @@ namespace GPU2
 	template<size_t dim>
 	class ClusteringGPU2 {
 	public:
-		template<size_t dim>
+		// Main clustering function. Performs k-means clustering on GPU using Thrust library
 		thrust::host_vector<size_t> PerformClustering(
 			thrust::host_vector<Point<dim>>& hostCentroids, 
 			thrust::host_vector<Point<dim>>& hostPoints)
@@ -101,6 +108,7 @@ namespace GPU2
 			size_t k = hostCentroids.size();
 			size_t N = hostPoints.size();
 
+			// Transfer data from host to device
 			timerManager.Host2DeviceDataTransfer.Start();
 
 			thrust::device_vector<Point<dim>> deviceCentroids = hostCentroids;
@@ -108,6 +116,7 @@ namespace GPU2
 
 			timerManager.Host2DeviceDataTransfer.Stop();
 
+			// Buffers for intermediate results
 			thrust::device_vector<Point<dim>> deviceSums(k);
 			thrust::device_vector<size_t> deviceCounts(k, 0);
 			thrust::device_vector<size_t> deviceCentroidsToUpdate(k, 0);
@@ -121,6 +130,7 @@ namespace GPU2
 
 			std::cout << std::endl << "Starting clustering..." << std::endl;
 
+			// Main clustering loop
 			while (iteration++ < maxIterations && changes != 0) {
 				std::cout << "\n=== Iteration: " << iteration << " ===" << std::endl;
 
@@ -132,6 +142,7 @@ namespace GPU2
 
 				thrust::sequence(devicePermutation.begin(), devicePermutation.end(), 0);
 
+				// Assign points to the nearest centroids
 				thrust::transform(
 					devicePermutation.begin(),
 					devicePermutation.end(),
@@ -139,6 +150,7 @@ namespace GPU2
 					AssignPointsToCentroids<dim>(devicePoints, deviceCentroids)
 				);
 
+				// Count changes in membership
 				changes = thrust::count_if(
 					thrust::make_zip_iterator(thrust::make_tuple(deviceMembership.begin(), devicePreviousMembership.begin())),
 					thrust::make_zip_iterator(thrust::make_tuple(deviceMembership.end(), devicePreviousMembership.end())),
@@ -152,10 +164,12 @@ namespace GPU2
 				std::cout << std::setw(35) << std::left << "    Changes in membership: " 
 					<< changes << std::endl;
 
+				// Exit if no changes in membership or maximum iterations reached
 				if (changes == 0 || iteration == maxIterations) break;
 
 				std::cout << " -> Updating centroids..." << std::endl;
 
+				// Update centroids based on assigned points
 				timerManager.UpdateCentroidsKernelTimer.Start();
 
 				thrust::copy(
@@ -224,6 +238,7 @@ namespace GPU2
 				std::cout << "\nClustering completed: Maximum number of iterations reached." << std::endl;
 			}
 
+			// Transfer data from device back to host
 			timerManager.Device2HostDataTransfer.Start();
 
 			thrust::copy(
