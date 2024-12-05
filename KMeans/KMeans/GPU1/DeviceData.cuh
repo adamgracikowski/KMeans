@@ -13,7 +13,6 @@ namespace GPU1
 		thrust::device_vector<unsigned> DeviceUpdatedCentroidsCounts;
 		thrust::device_vector<size_t> DeviceMembership;
 		thrust::device_vector<size_t> DeviceChanges;
-		thrust::device_vector<size_t> DevicePointsPermutation;
 
 		DeviceData(thrust::host_vector<Point<dim>>& hostCentroids, thrust::host_vector<Point<dim>>& hostPoints) :
 			DevicePoints(hostPoints),
@@ -21,10 +20,8 @@ namespace GPU1
 			DeviceUpdatedCentroids(hostCentroids.size()),
 			DeviceUpdatedCentroidsCounts(hostCentroids.size()),
 			DeviceMembership(hostPoints.size()),
-			DeviceChanges(hostPoints.size()),
-			DevicePointsPermutation(hostPoints.size())
+			DeviceChanges(hostPoints.size())
 		{
-			thrust::copy_n(thrust::make_counting_iterator(0), DevicePoints.GetSize(), DevicePointsPermutation.begin());
 		}
 
 		DeviceRawData<dim> ToDeviceRawData() {
@@ -38,7 +35,6 @@ namespace GPU1
 			result.DeviceUpdatedCentroids = DeviceUpdatedCentroids.RawAccess();
 			result.DeviceMembership = thrust::raw_pointer_cast(DeviceMembership.data());
 			result.DeviceChanges = thrust::raw_pointer_cast(DeviceChanges.data());
-			result.DevicePointsPermutation = thrust::raw_pointer_cast(DevicePointsPermutation.data());
 
 			return result;
 		}

@@ -10,7 +10,6 @@ namespace GPU1
 		float* DeviceCentroids{};
 		size_t* DeviceMembership{};
 		size_t* DeviceChanges{};
-		size_t* DevicePointsPermutation{};
 		float* DeviceUpdatedCentroids{};
 		unsigned* DeviceUpdatedCentroidsCounts{};
 	};

@@ -71,7 +71,7 @@ namespace GPU1 {
 			pointCoordinates[i] = GetCoordinate(
 				deviceRawData.DevicePoints,
 				deviceRawData.PointsCount,
-				deviceRawData.DevicePointsPermutation[pointIndex],
+				pointIndex,
 				i
 			);
 		}
