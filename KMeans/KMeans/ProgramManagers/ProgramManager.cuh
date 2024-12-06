@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <iomanip>
 #include <utility>
+#include <vector>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -18,8 +19,8 @@
 class IProgramManager {
 public:
 	virtual int GetN() = 0;
-	virtual thrust::host_vector<glm::vec3> GetGlmPoints() = 0;
-	virtual thrust::host_vector<glm::vec3> GetGlmCentroids() = 0;
+	virtual std::vector<glm::vec3> GetGlmPoints() = 0;
+	virtual std::vector<glm::vec3> GetGlmCentroids() = 0;
 	virtual int GetDimension() = 0;
 	virtual void DisplaySummary() = 0;
 	virtual thrust::host_vector<size_t> StartComputation() = 0;
@@ -47,32 +48,36 @@ public:
 		this->k = k;
 		this->Parameters = parameters;
 
-		std::cout << std::setw(25) << std::left << "Number of points: " 
+		std::cout << std::setw(25) << std::left << "Number of points: "
 			<< N << std::endl;
-		std::cout << std::setw(25) << std::left << "Dimension: " 
+		std::cout << std::setw(25) << std::left << "Dimension: "
 			<< d << std::endl;
-		std::cout << std::setw(25) << std::left << "Number of centroids: " 
+		std::cout << std::setw(25) << std::left << "Number of centroids: "
 			<< k << std::endl;
-		std::cout << std::setw(25) << std::left << "Computation method: " 
+		std::cout << std::setw(25) << std::left << "Computation method: "
 			<< parameters.ComputationMethod << std::endl;
-		std::cout << std::setw(25) << std::left << "Data format: " 
+		std::cout << std::setw(25) << std::left << "Data format: "
 			<< parameters.DataFormat << std::endl << std::endl << std::endl;
 	}
 
-	int GetN() override {
+	int GetN() override 
+	{
 		return N;
 	}
 
-	int GetDimension() override {
+	int GetDimension() override 
+	{
 		return d;
 	}
 
-	glm::vec3 PointToVec3(const Point<dim>& point) {
+	glm::vec3 PointToVec3(const Point<dim>& point)  
+	{
 		return glm::vec3(point.Coordinates[0], point.Coordinates[1], point.Coordinates[2]);
 	}
 
-	thrust::host_vector<glm::vec3> Points2Vec3(const thrust::host_vector<Point<dim>>& points) {
-		thrust::host_vector<glm::vec3> glmPoints(points.size());
+	std::vector<glm::vec3> Points2Vec3(const thrust::host_vector<Point<dim>>& points) 
+	{
+		std::vector<glm::vec3> glmPoints(points.size());
 
 		for (size_t i = 0; i < points.size(); ++i) {
 			glmPoints[i] = PointToVec3(points[i]);
@@ -81,15 +86,18 @@ public:
 		return glmPoints;
 	}
 
-	thrust::host_vector<glm::vec3> GetGlmPoints() override {
+	std::vector<glm::vec3> GetGlmPoints() override 
+	{
 		return Points2Vec3(Points);
 	}
 
-	thrust::host_vector<glm::vec3> GetGlmCentroids() override {
+	std::vector<glm::vec3> GetGlmCentroids() override 
+	{
 		return Points2Vec3(Centroids);
 	}
 
-	thrust::host_vector<size_t> StartComputation() override {
+	thrust::host_vector<size_t> StartComputation() override 
+	{
 		auto& timerManager = Timers::TimerManager::GetInstance();
 		timerManager.PerformClusteringTimer.Start();
 
@@ -117,7 +125,8 @@ public:
 		return membership;
 	}
 
-	void DisplaySummary() override {
+	void DisplaySummary() override 
+	{
 		auto& timerManager = TimerManager::GetInstance();
 
 		std::cout << std::endl;
@@ -155,12 +164,11 @@ public:
 		std::cout << std::endl;
 		std::cout << std::setw(40) << std::left << "Total clustering time: "
 			<< timerManager.PerformClusteringTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
-		std::cout << std::setw(40) << std::left << "Saving data to output file time: " 
+		std::cout << std::setw(40) << std::left << "Saving data to output file time: "
 			<< timerManager.SaveDataToOutputFileTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
-		std::cout << std::setw(40) << std::left << "Loading data from input file time: " 
+		std::cout << std::setw(40) << std::left << "Loading data from input file time: "
 			<< timerManager.LoadDataFromInputFileTimer.TotalElapsedMiliseconds() << " ms." << std::endl;
 	}
-
 	void LoadDataFromInputFile(FILE* inputFile) override {
 		std::cout << "Loading data from input file..." << std::endl;
 
@@ -179,7 +187,6 @@ public:
 
 		timerManager.LoadDataFromInputFileTimer.Stop();
 	}
-
 	void SaveDataToOutputFile(thrust::host_vector<size_t>& membership) override {
 		auto& timerManager = Timers::TimerManager::GetInstance();
 		timerManager.SaveDataToOutputFileTimer.Start();
@@ -189,8 +196,7 @@ public:
 		timerManager.SaveDataToOutputFileTimer.Stop();
 	}
 
-	~ProgramManager() = default;
-
+	~ProgramManager() override = default;
 private:
 	void LoadDataFromTextFile(FILE* inputFile) {
 		Points.resize(N);

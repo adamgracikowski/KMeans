@@ -16,61 +16,15 @@ namespace Timers
 		float TotalMilisecondsElapsed{};
 
 	public:
-		~DeviceTimer() {
-			Reset();
-		}
+		~DeviceTimer() override;
 
-		void Start() override {
-			// Ensure old events are destroyed before creating new ones
-			DestroyCudaEvents();
-			InitCudaEvents();
-			CUDACHECK(cudaEventRecord(StartEvent));
-		}
-
-		void Stop() override {
-			if (StartEvent == nullptr || StopEvent == nullptr)
-				return;
-
-			CUDACHECK(cudaEventRecord(StopEvent));
-			CUDACHECK(cudaEventSynchronize(StopEvent)); // Wait until the stop event is complete
-			CUDACHECK(cudaEventElapsedTime(&MilisecondsElapsed, StartEvent, StopEvent));
-
-			TotalMilisecondsElapsed += MilisecondsElapsed;
-		}
-
-		float ElapsedMiliseconds() override {
-			return MilisecondsElapsed;
-		}
-
-		float TotalElapsedMiliseconds() override {
-			return TotalMilisecondsElapsed;
-		}
-
-		void Reset() override {
-			DestroyCudaEvents();
-			MilisecondsElapsed = 0;
-			TotalMilisecondsElapsed = 0;
-		}
-
+		void Start() override;
+		void Stop() override;
+		float ElapsedMiliseconds() override;
+		float TotalElapsedMiliseconds() override;
+		void Reset() override;
 	private:
-		void InitCudaEvents() {
-			if (StartEvent == nullptr) {
-				CUDACHECK(cudaEventCreate(&StartEvent));
-			}
-			if (StopEvent == nullptr) {
-				CUDACHECK(cudaEventCreate(&StopEvent));
-			}
-		}
-
-		void DestroyCudaEvents() {
-			if (StartEvent != nullptr) {
-				CUDACHECK(cudaEventDestroy(StartEvent));
-				StartEvent = nullptr;
-			}
-			if (StopEvent != nullptr) {
-				CUDACHECK(cudaEventDestroy(StopEvent));
-				StopEvent = nullptr;
-			}
-		}
+		void InitCudaEvents();
+		void DestroyCudaEvents();
 	};
 }

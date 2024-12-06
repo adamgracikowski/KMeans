@@ -2,6 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <CudaCompile Include="kernel.cu" />
+    <CudaCompile Include="Timers\DeviceTimer.cu" />
+    <CudaCompile Include="Timers\HostTimer.cu" />
+    <CudaCompile Include="ProgramManagers\ParseProgramParameters.cu" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Timers">

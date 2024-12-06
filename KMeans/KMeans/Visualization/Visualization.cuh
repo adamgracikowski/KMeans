@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <thrust/host_vector.h>
+#include <vector>
 
 #define NUMBER_OF_COLORS 20
 
@@ -133,7 +134,7 @@ void CursorPositionCallback(GLFWwindow* window, double xpos, double ypos) {
 
 // Visualizes a 3D dataset of points using OpenGL
 int Visualize(
-    thrust::host_vector<glm::vec3>& glmPoints, 
+    std::vector<glm::vec3>& glmPoints, 
     thrust::host_vector<size_t>& membership) 
 {
     if (!glfwInit()) return -1;
@@ -204,7 +205,7 @@ int Visualize(
     float maxExtent = glm::length(maxPoint - minPoint);
 
     // Map centroid membership to colors
-    thrust::host_vector<glm::vec3> colors(glmPoints.size());
+    std::vector<glm::vec3> colors(glmPoints.size());
     for (size_t i = 0; i < glmPoints.size(); ++i) {
         colors[i] = membershipColors[membership[i] % NUMBER_OF_COLORS];
     }

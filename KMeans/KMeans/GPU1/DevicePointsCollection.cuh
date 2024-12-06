@@ -33,8 +33,6 @@ namespace GPU1
 	__global__
 	void SoA2AoSKernel(float* deviceSoA, float* deviceAoS, size_t length)
 	{
-		// [x1, x2, y1, y2, z1, z2] -> [x1, y1, z1, x2, y2, z2] 
-
 		size_t tid = threadIdx.x + blockIdx.x * blockDim.x;
 
 		if (tid >= length) return;

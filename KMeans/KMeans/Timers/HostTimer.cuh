@@ -13,39 +13,13 @@ namespace Timers
 		std::chrono::microseconds ElapsedMicroseconds;
 
 	public:
-		HostTimer() : StartTimePoint(std::chrono::steady_clock::time_point::min()),
-			TotalElapsedMicroseconds(std::chrono::microseconds::zero()),
-			ElapsedMicroseconds(std::chrono::microseconds::zero()) {
-		}
+		HostTimer();
 
-		void Start() override {
-			StartTimePoint = std::chrono::steady_clock::now();
-		}
-
-		void Stop() override {
-			auto stopTimePoint = std::chrono::steady_clock::now();
-
-			ElapsedMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(
-				stopTimePoint - StartTimePoint
-			);
-
-			TotalElapsedMicroseconds += ElapsedMicroseconds;
-		}
-
-		float ElapsedMiliseconds() override {
-			return ElapsedMicroseconds.count() / 1000.0f;
-		}
-
-		float TotalElapsedMiliseconds() override {
-			return TotalElapsedMicroseconds.count() / 1000.0f;
-		}
-
-		void Reset() override {
-			StartTimePoint = std::chrono::steady_clock::time_point::min();
-			ElapsedMicroseconds = std::chrono::microseconds::zero();
-			TotalElapsedMicroseconds = std::chrono::microseconds::zero();
-		}
-
-		~HostTimer() override = default;
+		void Start() override;
+		void Stop() override;
+		float ElapsedMiliseconds() override;
+		float TotalElapsedMiliseconds() override;
+		void Reset() override;
+		~HostTimer() override;
 	};
 }
