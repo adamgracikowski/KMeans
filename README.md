@@ -1,17 +1,11 @@
 # K-Means Clustering:
 
-This project demonstrates the implementation of the K-Means clustering algorithm using three different approaches: 
-- CPU-based computation, 
-- GPU computation using custom CUDA kernels, 
-- and GPU computation utilizing the Thrust library. 
+Projekt został zrealizowany w ramach przedmiotu **_Procesory Graficzne w Zastosowaniach Obliczeniowych_** w trakcie zimowego semestru roku akademickiego 2024-2025 z wykorzystaniem [CUDA](https://en.wikipedia.org/wiki/CUDA).
 
-The goal is to compare the performance and efficiency of these methods in clustering large datasets.
-
-The project was implemented as a part of the Graphic Processors in Computational Applications course at Warsaw University of Technology during the winter semester of the 2024-2025 academic year.
-
-<p align="center">
-  <img src="Images/01.PNG"/>
-</p>
+Projekt zawiera $3$ różne implementacje [algorytmu](https://www.eecs.northwestern.edu/~wkliao/Kmeans/index.html):
+- `cpu` to implementacja algorytmu wykonywana całkowicie na CPU.
+- `gpu1` to implementacja z wykorzystaniem własnych funkcji wykonywanych na karcie graficznej.
+- `gpu2` to alternatywna implementacja korzystająca z [biblioteki Thrust](https://nvidia.github.io/cccl/thrust/index.html#).
 
 ## Specyfikacja danych:
 - $N$ - liczba punktów ($1 \leq N \leq 50 \times 10^6$)
@@ -75,25 +69,25 @@ Program pobiera 4 parametry pozycyjne:
   - jeżeli plik nie istnieje, to zostanie utworzony
   - w przyciwnym przypadku jego zawartość zostanie nadpisana przez aktualne wywołanie programu
 
-## Features:
+## Wizualizacja:
 
-## Prerequisites:
+Dla $d=3$ po zakończeniu obliczeń automatycznie uruchamiana jest wizualizacja wyniku działania algorytmu.
+Użytkownik może obracać zbiór punktów w przestrzeni $3$-wymiarowej oraz zmieniać rozmiar okna.
 
-## Running the Program:
+Pozycja kamery jest jest wyznaczana dynamicznie na podstawie aktualnego zbioru danych, aby zapewnić widoczność wszystkich punktów rozważanego zbioru.
 
-## Input Format:
+<p align="center">
+  <img src="Images/01.PNG"/>
+</p>
 
-## Output Format:
-
-## Visualization:
+Wizualizacja została zaimplementowana z wykorzystaniem [OpenGL](https://pl.wikipedia.org/wiki/OpenGL). 
+Wszystkie potrzebne zależności zostały umieszczone w repozytorium i skonfigurowane w projekcie.
 
 <p align="center">
   <img src="Images/02.PNG"/>
 </p>
 
-<p align="center">
-  <img src="Images/03.PNG"/>
-</p>
+Dodatkowo `KMeans.Visualization` zawiera skrypt do wizualizacji wyniku działania algorytmu w języku [Python](https://www.python.org/) oraz skrypt pozwalający na wygenerowanie przykładowego pliku wejściowego.
 
 <p align="center">
   <img src="Images/04.PNG"/>
