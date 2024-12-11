@@ -90,15 +90,3 @@ Wszystkie potrzebne zależności zostały umieszczone w repozytorium i skonfigur
 Dodatkowo `KMeans.Visualization` zawiera skrypt `kmeans_visualization.py` do wizualizacji wyniku działania algorytmu w języku [Python](https://www.python.org/) oraz skrypt `kmeans_generate_data.py`, pozwalający na wygenerowanie przykładowego pliku wejściowego. 
 
 Plik `requirements.txt` zawiera biblioteki wymagane do uruchomienia skryptów. W celu zainstalowania potrzebnych zależności należy skorzystać z narzędzia [pip](https://pip.pypa.io/en/stable/cli/pip_install/).
-
-## Author:
-
-My GitHub: [@adamgracikowski](https://github.com/adamgracikowski)
-
-## Contributing:
-
-All contributions, issues, and feature requests are welcome! 🤝
-
-## Show your support:
-
-Give a ⭐️ if you like this project and its documentation!
